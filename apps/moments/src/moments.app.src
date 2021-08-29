@@ -5,10 +5,11 @@
   {mod, {moments_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    mnesia
    ]},
   {env,[]},
-  {modules, []},
+  {modules, [moments_app, moments_sup]},
 
   {licenses, ["Apache 2.0"]},
   {links, []}
