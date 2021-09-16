@@ -29,12 +29,15 @@ create_tables(Nodes) ->
                                  {disc_copies, Nodes}]),
     {atomic, ok} = mnesia:create_table(follows, [{attributes, record_info(fields, follows)},
                                  {disc_copies, Nodes},
+                                 {index, [#follows.moment]},
                                  {type, bag}]),
-    {atomic, ok} = mnesia:create_table(creates, [{attributes, record_info(fields, creates)},
+    {atomic, ok} = mnesia:create_table(admin_of, [{attributes, record_info(fields, admin_of)},
                                  {disc_copies, Nodes},
+                                 {index, [#admin_of.moment]},
                                  {type, bag}]),
     {atomic, ok} = mnesia:create_table(owns, [{attributes, record_info(fields, owns)},
                                  {disc_copies, Nodes},
+                                 {index, [#owns.device]},
                                  {type, bag}]).
 
 init(Nodes) ->

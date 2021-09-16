@@ -15,7 +15,7 @@
 -record(follows, {user,
                  moment}).
 
--record(creates, {user,
+-record(admin_of, {user,
                  moment}).
 
 -record(owns, {user,
