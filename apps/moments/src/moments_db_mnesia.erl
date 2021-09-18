@@ -7,6 +7,7 @@
 -export([dump_table/1, dump_all_tables/0]).
 
 insert_user(Uid, Name) ->
+    ?LOG_INFO("Insert user id:~ts name:~ts", [Uid, Name]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =:= [] of
                     true ->
@@ -20,6 +21,7 @@ insert_user(Uid, Name) ->
     mnesia:transaction(F).
 
 follow(Uid, Mid) ->
+    ?LOG_INFO("Follow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
                 Follow = #follows{user=Uid, moment=Mid},
                 mnesia:write(Follow)
@@ -27,12 +29,14 @@ follow(Uid, Mid) ->
     mnesia:transaction(F).
 
 unfollow(Uid, Mid) ->
+    ?LOG_INFO("Unfollow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
                 mnesia:delete_object({follows, Uid, Mid})
         end,
     mnesia:transaction(F).
 
 remove_user(Uid) ->
+    ?LOG_INFO("Remove user id:~ts", [Uid]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =/= [] of
                     true ->
@@ -72,6 +76,7 @@ remove_user(Uid) ->
     mnesia:transaction(F).
 
 set_new_admin(Mid, NewAdmin) ->
+    ?LOG_INFO("Set new admin moment id:~ts user id:~ts", [Mid, NewAdmin]),
     F = fun() ->
                 AdminOf = #admin_of{user=NewAdmin, moment=Mid},
                 mnesia:write(AdminOf)
@@ -79,6 +84,7 @@ set_new_admin(Mid, NewAdmin) ->
     mnesia:transaction(F).
 
 insert_moment(Mid, Name, Uid) ->
+    ?LOG_INFO("Insert moment moment id:~ts name:~ts admin:~ts", [Mid, Name, Uid]),
     F = fun() ->
                 case mnesia:read({moment, Mid}) =:= [] of
                     true ->
@@ -105,7 +111,7 @@ insert_moment(Mid, Name, Uid) ->
     mnesia:transaction(F).
 
 remove_moment(Mid) ->
-    ?LOG_ERROR("Remove moment ~ts", [Mid]),
+    ?LOG_INFO("Remove moment id:~ts", [Mid]),
     F = fun() ->
                 case mnesia:read({moment, Mid}) =/= [] of
                     true ->
