@@ -3,7 +3,7 @@
 -include("data_records.hrl").
 -include_lib("kernel/include/logger.hrl").
 
--export([insert_user/2, remove_user/1, insert_moment/3, remove_moment/1, set_new_admin/2]).
+-export([insert_user/2, remove_user/1, insert_moment/3, remove_moment/1, set_new_admin/2, follow/2, unfollow/2]).
 -export([dump_table/1, dump_all_tables/0]).
 
 insert_user(Uid, Name) ->
@@ -19,19 +19,40 @@ insert_user(Uid, Name) ->
         end,
     mnesia:transaction(F).
 
+follow(Uid, Mid) ->
+    F = fun() ->
+                Follow = #follows{user=Uid, moment=Mid},
+                mnesia:write(Follow)
+        end,
+    mnesia:transaction(F).
+
+unfollow(Uid, Mid) ->
+    F = fun() ->
+                mnesia:delete_object({follows, Uid, Mid})
+        end,
+    mnesia:transaction(F).
+
 remove_user(Uid) ->
     F = fun() ->
                 case mnesia:read({user, Uid}) =/= [] of
                     true ->
-                        % TODO: remove/modify follows
-                        mnesia:delete({user, Uid}),
+                        % remove/modify follows
+                        case mnesia:read({follows, Uid}) of
+                            [] -> ?LOG_ERROR("No moments to follow");
+                            MomentsFollowed ->
+                                ?LOG_ERROR("MomentsFollowed: ~ts", MomentsFollowed),
+                                lists:foreach(fun(#follows{moment=Mid}) ->
+                                                      ?LOG_ERROR("Moment: ~ts", [Mid]),
+                                                      unfollow(Uid, Mid)
+                                              end, MomentsFollowed)
+                        end,
+                        % handle administered moments: if no followers, remove moment, otherwise set new admin
                         case mnesia:read({admin_of, Uid}) of
                             [] -> ?LOG_ERROR("No moments to admin");
                             MomentsAdminOf ->
                                 ?LOG_ERROR("MomentsAdminOf: ~ts", MomentsAdminOf),
                                 lists:foreach(fun(#admin_of{moment=Moment}) ->
                                                       ?LOG_ERROR("Moment: ~ts", [Moment]),
-                                                      % Moment = #admin_of{moment = Moment, _ = '_'},
                                                       Pat = #follows{moment = Moment, _ = '_'},
                                                       Followers = mnesia:match_object(Pat),
                                                       case Followers of
@@ -41,7 +62,8 @@ remove_user(Uid) ->
                                                               set_new_admin(Moment, NewAdmin)
                                                       end
                                               end, MomentsAdminOf)
-                        end;
+                        end,
+                        mnesia:delete({user, Uid});
                     false ->
                         ?LOG_ERROR("No user ~ts to delete", [Uid]),
                         {error, user_doesnt_exists}
