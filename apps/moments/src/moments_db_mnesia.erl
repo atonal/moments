@@ -36,7 +36,9 @@ remove_user(Uid) ->
                                                       Followers = mnesia:match_object(Pat),
                                                       case Followers of
                                                           [] -> remove_moment(Moment);
-                                                          [NewAdmin|_] -> set_new_admin(Moment, NewAdmin)
+                                                          [#follows{user=NewAdmin}|_] ->
+                                                              mnesia:delete_object({admin_of, Uid, Moment}),
+                                                              set_new_admin(Moment, NewAdmin)
                                                       end
                                               end, MomentsAdminOf)
                         end;
