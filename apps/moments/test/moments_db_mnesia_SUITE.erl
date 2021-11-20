@@ -28,5 +28,7 @@ end_per_suite(_Config) ->
 % Tests
 insert_user(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
+    test_utils:verify_user("uid1", "Name 1"),
     {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
+    test_utils:verify_user("uid2", "Name 2"),
     {atomic, {error, user_exists}} = moments_db_mnesia:insert_user("uid1", "Name 3").
