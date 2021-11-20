@@ -105,7 +105,7 @@ insert_moment(Mid, Name, Uid) ->
                         end;
                     false ->
                         ?LOG_ERROR("Moment ~ts already exists", [Mid]),
-                        {error, user_exists}
+                        {error, moment_exists}
                 end
         end,
     mnesia:transaction(F).

@@ -3,7 +3,6 @@
                  interval,
                  excl_days,
                  excl_time,
-                 admin,
                  private}).
 
 -record(user, {user_id,
