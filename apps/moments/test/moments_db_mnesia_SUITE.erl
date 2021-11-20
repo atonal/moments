@@ -11,6 +11,7 @@ init_per_testcase(_, Config) ->
     Config.
 
 end_per_testcase(_, _Config) ->
+    ok = test_utils:clear_all_tables(),
     ok.
 
 init_per_suite(Config) ->
@@ -24,6 +25,7 @@ end_per_suite(_Config) ->
     application:stop(mnesia),
     ok.
 
+% Tests
 insert_user(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
     {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
