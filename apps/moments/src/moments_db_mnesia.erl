@@ -23,8 +23,20 @@ insert_user(Uid, Name) ->
 follow(Uid, Mid) ->
     ?LOG_INFO("Follow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
-                Follow = #follows{user=Uid, moment=Mid},
-                mnesia:write(Follow)
+                case mnesia:read({moment, Mid}) =/= [] of
+                    true ->
+                        case mnesia:read({user, Uid}) =/= [] of
+                            true ->
+                                Follow = #follows{user=Uid, moment=Mid},
+                                mnesia:write(Follow);
+                            false ->
+                                ?LOG_ERROR("User ~ts doesn't exist", [Uid]),
+                                {error, user_doesnt_exists}
+                        end;
+                    false ->
+                        ?LOG_ERROR("Moment ~ts doesn't exist", [Mid]),
+                        {error, moment_doesnt_exists}
+                end
         end,
     mnesia:transaction(F).
 

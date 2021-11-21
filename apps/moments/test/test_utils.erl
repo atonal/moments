@@ -1,6 +1,6 @@
 -module(test_utils).
 -include("../src/data_records.hrl").
--export([clear_all_tables/0, verify_user/2, verify_moment/2, verify_admin_of/2]).
+-export([clear_all_tables/0, verify_user/2, verify_moment/2, verify_admin_of/2, verify_follow/2]).
 
 clear_all_tables()->
     clear_all_tables(mnesia:system_info(tables)).
@@ -29,3 +29,7 @@ verify_moment(Mid, Name) ->
 verify_admin_of(Uid, Mid) ->
     F = fun() -> mnesia:read({admin_of, Uid}) end,
     {atomic, [#admin_of{user=Uid, moment=Mid}]} = mnesia:transaction(F).
+
+verify_follow(Uid, Mid) ->
+    F = fun() -> mnesia:read({follows, Uid}) end,
+    {atomic, [#follows{user=Uid, moment=Mid}]} = mnesia:transaction(F).
