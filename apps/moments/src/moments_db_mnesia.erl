@@ -41,6 +41,7 @@ follow(Uid, Mid) ->
     mnesia:transaction(F).
 
 unfollow(Uid, Mid) ->
+    % TODO: return notification if unfollowing nonexistent things?
     ?LOG_INFO("Unfollow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
                 mnesia:delete_object({follows, Uid, Mid})

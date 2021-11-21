@@ -3,9 +3,9 @@
 
 -export([all/0, init_per_suite/1, end_per_suite/1,
          init_per_testcase/2, end_per_testcase/2]).
--export([insert_user/1, insert_moment/1, follow/1]).
+-export([insert_user/1, insert_moment/1, follow/1, unfollow/1]).
 
-all() -> [insert_user, insert_moment, follow].
+all() -> [insert_user, insert_moment, follow, unfollow].
 
 init_per_testcase(_, Config) ->
     Config.
@@ -49,3 +49,13 @@ follow(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
     {atomic, ok} = moments_db_mnesia:follow("uid2", "moment1"),
     test_utils:verify_follow("uid2", "moment1").
+
+unfollow(_Config) ->
+    {atomic, ok} = moments_db_mnesia:unfollow("uid1", "moment1"),
+    {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
+    {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
+    {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
+    {atomic, ok} = moments_db_mnesia:follow("uid2", "moment1"),
+    test_utils:verify_follow("uid2", "moment1"),
+    {atomic, ok} = moments_db_mnesia:unfollow("uid2", "moment1"),
+    test_utils:verify_follow_empty("uid2").
