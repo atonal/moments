@@ -37,6 +37,6 @@ insert_moment(_Config) ->
     {atomic, {error, user_doesnt_exists}} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
     {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    test_utils:verify_moment("moment1", "moment name 1", "uid1"),
+    test_utils:verify_moment("moment1", "moment name 1"),
     test_utils:verify_admin_of("uid1", "moment1"),
     {atomic, {error, moment_exists}} = moments_db_mnesia:insert_moment("moment1", "moment name 2", "uid2").
