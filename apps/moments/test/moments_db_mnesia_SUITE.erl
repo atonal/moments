@@ -1,17 +1,7 @@
 -module(moments_db_mnesia_SUITE).
 -include_lib("common_test/include/ct.hrl").
 
--export([all/0, init_per_suite/1, end_per_suite/1,
-         init_per_testcase/2, end_per_testcase/2]).
--export([insert_user/1,
-         insert_moment/1,
-         follow/1,
-         unfollow/1,
-         remove_nonexistent_user/1,
-         remove_user/1,
-         remove_user_that_follows/1,
-         remove_user_remove_admin_moment/1,
-         remove_user_set_new_admin_moment/1]).
+-compile(export_all).
 
 all() -> [insert_user,
           insert_moment,
