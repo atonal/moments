@@ -2,8 +2,11 @@
 -include("../src/data_records.hrl").
 -export([clear_all_tables/0,
          verify_user/2,
+         verify_user_empty/1,
          verify_moment/2,
+         verify_moment_empty/1,
          verify_admin_of/2,
+         verify_admin_of_empty/1,
          verify_follow/2,
          verify_follow_empty/1]).
 
@@ -20,6 +23,9 @@ clear_all_tables([]) ->
 verify_user(Uid, Name) ->
     F = fun() -> mnesia:read({user, Uid}) end,
     {atomic, [#user{user_id=Uid, name=Name}]} = mnesia:transaction(F).
+verify_user_empty(Uid) ->
+    F = fun() -> mnesia:read({user, Uid}) end,
+    {atomic, []} = mnesia:transaction(F).
 
 verify_moment(Mid, Name) ->
     F = fun() -> mnesia:read({moment, Mid}) end,
@@ -30,10 +36,17 @@ verify_moment(Mid, Name) ->
                  excl_days=none,
                  excl_time=none,
                  private=false}]} = mnesia:transaction(F).
+verify_moment_empty(Mid) ->
+    F = fun() -> mnesia:read({moment, Mid}) end,
+    {atomic, []} = mnesia:transaction(F).
+
 
 verify_admin_of(Uid, Mid) ->
     F = fun() -> mnesia:read({admin_of, Uid}) end,
     {atomic, [#admin_of{user=Uid, moment=Mid}]} = mnesia:transaction(F).
+verify_admin_of_empty(Uid) ->
+    F = fun() -> mnesia:read({admin_of, Uid}) end,
+    {atomic, []} = mnesia:transaction(F).
 
 verify_follow(Uid, Mid) ->
     F = fun() -> mnesia:read({follows, Uid}) end,
