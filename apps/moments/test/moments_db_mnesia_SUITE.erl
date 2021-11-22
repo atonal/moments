@@ -17,7 +17,8 @@ all() -> [insert_user,
           remove_user,
           remove_user_that_follows,
           remove_user_remove_admin_moment,
-          remove_user_set_new_admin_moment].
+          remove_user_set_new_admin_moment,
+          set_new_admin].
 
 init_per_testcase(_, Config) ->
     Config.
@@ -141,3 +142,13 @@ remove_user_set_new_admin_moment(_Config) ->
     test_utils:verify_user(Uid2, "Name 2"),
     test_utils:verify_admin_of(Uid2, "moment1"),
     test_utils:verify_moment("moment1", "moment name 1").
+
+set_new_admin(_Config) ->
+    Uid1 = "uid1",
+    Uid2 = "uid2",
+    {atomic, ok} = moments_db_mnesia:insert_user(Uid1, "Name 1"),
+    {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
+    test_utils:verify_admin_of(Uid1, "moment1"),
+    {atomic, ok} = moments_db_mnesia:insert_user(Uid2, "Name 2"),
+    {atomic, ok} = moments_db_mnesia:set_new_admin("moment1", Uid2),
+    test_utils:verify_admin_of(Uid2, "moment1").
