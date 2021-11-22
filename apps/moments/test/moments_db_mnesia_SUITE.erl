@@ -4,8 +4,14 @@
 -compile(export_all).
 
 all() -> [insert_user,
+          insert_existing_user,
           insert_moment,
+          insert_moment_user_doesnt_exist,
+          insert_existing_moment,
+          follow_moment_doesnt_exist,
+          follow_user_doesnt_exist,
           follow,
+          unfollow_nonexistent,
           unfollow,
           remove_nonexistent_user,
           remove_user,
@@ -34,30 +40,48 @@ end_per_suite(_Config) ->
 % Tests
 insert_user(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
+    test_utils:verify_user("uid1", "Name 1").
+
+insert_existing_user(_Config) ->
+    {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
     test_utils:verify_user("uid1", "Name 1"),
-    {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
-    test_utils:verify_user("uid2", "Name 2"),
-    {atomic, {error, user_exists}} = moments_db_mnesia:insert_user("uid1", "Name 3").
+    {atomic, {error, user_exists}} = moments_db_mnesia:insert_user("uid1", "Name 2").
+
+insert_moment_user_doesnt_exist(_Config) ->
+    {atomic, {error, user_doesnt_exists}} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1").
 
 insert_moment(_Config) ->
-    {atomic, {error, user_doesnt_exists}} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
+    {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
+    {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
+    test_utils:verify_moment("moment1", "moment name 1"),
+    test_utils:verify_admin_of("uid1", "moment1").
+
+insert_existing_moment(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
     {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
     test_utils:verify_moment("moment1", "moment name 1"),
     test_utils:verify_admin_of("uid1", "moment1"),
     {atomic, {error, moment_exists}} = moments_db_mnesia:insert_moment("moment1", "moment name 2", "uid2").
 
-follow(_Config) ->
-    {atomic, {error, moment_doesnt_exists}} = moments_db_mnesia:follow("uid1", "moment1"),
+follow_moment_doesnt_exist(_Config) ->
+    {atomic, {error, moment_doesnt_exists}} = moments_db_mnesia:follow("uid1", "moment1").
+
+follow_user_doesnt_exist(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
     {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    {atomic, {error, user_doesnt_exists}} = moments_db_mnesia:follow("uid2", "moment1"),
+    {atomic, {error, user_doesnt_exists}} = moments_db_mnesia:follow("uid2", "moment1").
+
+follow(_Config) ->
+    {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
+    {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
     {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
     {atomic, ok} = moments_db_mnesia:follow("uid2", "moment1"),
     test_utils:verify_follow("uid2", "moment1").
 
+unfollow_nonexistent(_Config) ->
+    {atomic, ok} = moments_db_mnesia:unfollow("uid1", "moment1").
+
 unfollow(_Config) ->
-    {atomic, ok} = moments_db_mnesia:unfollow("uid1", "moment1"),
     {atomic, ok} = moments_db_mnesia:insert_user("uid1", "Name 1"),
     {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
     {atomic, ok} = moments_db_mnesia:insert_user("uid2", "Name 2"),
