@@ -129,11 +129,18 @@ remove_moment(Mid) ->
                 case mnesia:read({moment, Mid}) =/= [] of
                     true ->
                         mnesia:delete({moment, Mid}),
-                        Pat = #admin_of{moment = Mid, _ = '_'},
-                        Delete = mnesia:match_object(Pat),
+                        % remove admin_of link
+                        AdminPat = #admin_of{moment = Mid, _ = '_'},
+                        Delete = mnesia:match_object(AdminPat),
                         lists:foreach(fun(X) ->
                                               mnesia:delete_object(X)
-                                      end, Delete);
+                                      end, Delete),
+                        % remove follows links
+                        FollowPat = #follows{moment = Mid, _ = '_'},
+                        Followers = mnesia:match_object(FollowPat),
+                        lists:foreach(fun(X) ->
+                                              mnesia:delete_object(X)
+                                      end, Followers);
                     false ->
                         ?LOG_ERROR("No moment ~ts to delete", [Mid]),
                         {error, moment_doesnt_exists}

@@ -18,7 +18,10 @@ all() -> [insert_user,
           remove_user_that_follows,
           remove_user_remove_admin_moment,
           remove_user_set_new_admin_moment,
-          set_new_admin].
+          set_new_admin,
+          remove_nonexistent_moment,
+          remove_moment,
+          remove_moment_remove_follows].
 
 init_per_testcase(_, Config) ->
     Config.
@@ -126,6 +129,7 @@ remove_user_remove_admin_moment(_Config) ->
     test_utils:verify_admin_of_empty(Uid1),
     test_utils:verify_moment_empty("moment1").
 
+% TODO: _which_ user is set as new admin?
 remove_user_set_new_admin_moment(_Config) ->
     Uid1 = "uid1",
     Uid2 = "uid2",
@@ -152,3 +156,27 @@ set_new_admin(_Config) ->
     {atomic, ok} = moments_db_mnesia:insert_user(Uid2, "Name 2"),
     {atomic, ok} = moments_db_mnesia:set_new_admin("moment1", Uid2),
     test_utils:verify_admin_of(Uid2, "moment1").
+
+remove_nonexistent_moment(_Config) ->
+    {atomic, {error, moment_doesnt_exists}} = moments_db_mnesia:remove_moment("moment1").
+
+remove_moment(_Config) ->
+    Uid1 = "uid1",
+    {atomic, ok} = moments_db_mnesia:insert_user(Uid1, "Name 1"),
+    {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
+    test_utils:verify_moment("moment1", "moment name 1"),
+    test_utils:verify_admin_of(Uid1, "moment1"),
+    {atomic, ok} = moments_db_mnesia:remove_moment("moment1"),
+    test_utils:verify_moment_empty("moment1"),
+    test_utils:verify_admin_of_empty(Uid1).
+
+remove_moment_remove_follows(_Config) ->
+    Uid1 = "uid1",
+    Uid2 = "uid2",
+    {atomic, ok} = moments_db_mnesia:insert_user(Uid1, "Name 1"),
+    {atomic, ok} = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
+    {atomic, ok} = moments_db_mnesia:insert_user(Uid2, "Name 2"),
+    {atomic, ok} = moments_db_mnesia:follow(Uid2, "moment1"),
+    test_utils:verify_follow(Uid2, "moment1"),
+    {atomic, ok} = moments_db_mnesia:remove_moment("moment1"),
+    test_utils:verify_follow_empty(Uid2).
