@@ -16,6 +16,7 @@
 start(_StartType, _StartArgs) ->
     init([node()]),
     mnesia:wait_for_tables([moment, user, device, follows, admin_of, owns], 5000),
+    spawn(watcher, start, []),
     moments_sup:start_link().
 
 stop(_State) ->
