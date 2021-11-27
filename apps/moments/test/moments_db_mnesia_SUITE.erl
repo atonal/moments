@@ -34,7 +34,7 @@ init_per_suite(Config) ->
     Priv = ?config(priv_dir, Config),
     ok = application:set_env(mnesia, dir, Priv),
     ok = application:start(mnesia),
-    ok = application:start(moments),
+    ok = moments_db_mnesia:init([node()]),
     Config.
 
 end_per_suite(_Config) ->
