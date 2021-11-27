@@ -1,9 +1,12 @@
 -module(watcher).
 -include_lib("kernel/include/logger.hrl").
 
--export([start/0, stop/0]).
+-export([init/0, start/0, stop/0]).
 
 start() ->
+    spawn(?MODULE, init, []).
+
+init() ->
     ?LOG_NOTICE("Subscribing to mnesia"),
     mnesia:subscribe({table, moment, simple}),
     ?LOG_NOTICE("Start watching"),
