@@ -10,7 +10,8 @@
          remove_moment/1,
          set_new_admin/2,
          follow/2,
-         unfollow/2]).
+         unfollow/2,
+         get_moments/0]).
 
 init(Nodes) ->
     case mnesia:change_table_copy_type(schema, node(), disc_copies) of
@@ -183,3 +184,11 @@ remove_moment(Mid) ->
                 end
         end,
     mnesia:transaction(F).
+
+get_moments() ->
+    F = fun() ->
+                Pat = #moment{_ = '_'},
+                mnesia:match_object(Pat)
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
