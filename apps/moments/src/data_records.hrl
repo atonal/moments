@@ -1,21 +1,21 @@
--record(moment, {moment_id,
-                 name,
-                 interval,
-                 excl_days,
-                 excl_time,
-                 private}).
+-record(moment, {moment_id :: string() | '_',
+                 name :: string() | '_',
+                 interval :: integer() | '_',
+                 excl_days :: list() | '_',
+                 excl_time :: list() | '_',
+                 private :: boolean() | '_'}).
 
--record(user, {user_id,
-              name}).
+-record(user, {user_id :: string() | '_',
+              name :: string() | '_'}).
 
--record(device, {device_id,
-                name}).
+-record(device, {device_id :: string() | '_',
+                name :: string() | '_'}).
 
--record(follows, {user,
-                 moment}).
+-record(follows, {user :: string() | '_',
+                 moment :: string() | '_'}).
 
--record(admin_of, {user,
-                 moment}).
+-record(admin_of, {user :: string() | '_',
+                 moment :: string() | '_'}).
 
--record(owns, {user,
-         device}).
+-record(owns, {user :: string() | '_',
+         device :: string() | '_'}).

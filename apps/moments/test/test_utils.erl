@@ -33,8 +33,8 @@ verify_moment(Mid, Name) ->
                  moment_id=Mid,
                  name=Name,
                  interval=1,
-                 excl_days=none,
-                 excl_time=none,
+                 excl_days=[],
+                 excl_time=[],
                  private=false}]} = mnesia:transaction(F).
 verify_moment_empty(Mid) ->
     F = fun() -> mnesia:read({moment, Mid}) end,
