@@ -1,5 +1,7 @@
+-type utc_time() :: integer().
 -record(moment, {moment_id :: string() | '_',
                  name :: string() | '_',
+                 next_moment :: utc_time() | '_',
                  interval :: integer() | '_',
                  excl_days :: list() | '_',
                  excl_time :: list() | '_',
