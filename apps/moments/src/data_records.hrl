@@ -1,23 +1,35 @@
 -type utc_time() :: integer().
--record(moment, {moment_id :: string() | '_',
-                 name :: string() | '_',
-                 next_moment :: utc_time() | '_',
-                 interval :: integer() | '_',
-                 excl_days :: list() | '_',
-                 excl_time :: list() | '_',
-                 private :: boolean() | '_'}).
 
--record(user, {user_id :: string() | '_',
-              name :: string() | '_'}).
+-type moment_id() :: string().
+-type moment_name() :: string().
+-type next_moment() :: utc_time().
+-type interval() :: integer().
+-type excl_days() :: list().
+-type excl_time() :: list().
+-type private() :: boolean().
+-record(moment, {moment_id :: moment_id() | '_',
+                 name :: moment_name() | '_',
+                 next_moment :: next_moment() | '_',
+                 interval :: interval() | '_',
+                 excl_days :: excl_days() | '_',
+                 excl_time :: excl_time() | '_',
+                 private :: private() | '_'}).
 
--record(device, {device_id :: string() | '_',
-                name :: string() | '_'}).
+-type user_id() :: string().
+-type user_name() :: string().
+-record(user, {user_id :: user_id() | '_',
+              name :: user_name() | '_'}).
 
--record(follows, {user :: string() | '_',
-                 moment :: string() | '_'}).
+-type device_id() :: string().
+-type device_name() :: string().
+-record(device, {device_id :: device_id() | '_',
+                name :: device_name() | '_'}).
 
--record(admin_of, {user :: string() | '_',
-                 moment :: string() | '_'}).
+-record(follows, {user :: user_id() | '_',
+                 moment :: moment_id() | '_'}).
 
--record(owns, {user :: string() | '_',
-         device :: string() | '_'}).
+-record(admin_of, {user :: user_id() | '_',
+                 moment :: moment_id() | '_'}).
+
+-record(owns, {user :: user_id() | '_',
+         device :: device_id() | '_'}).

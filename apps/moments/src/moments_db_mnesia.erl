@@ -43,6 +43,7 @@ create_tables(Nodes) ->
                                  {index, [#owns.device]},
                                  {type, bag}]).
 
+-spec insert_user(user_id(), user_name()) -> tuple().
 insert_user(Uid, Name) ->
     ?LOG_INFO("Insert user id:~ts name:~ts", [Uid, Name]),
     F = fun() ->
@@ -57,6 +58,7 @@ insert_user(Uid, Name) ->
         end,
     mnesia:transaction(F).
 
+-spec follow(user_id(), moment_id()) -> tuple().
 follow(Uid, Mid) ->
     ?LOG_INFO("Follow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
@@ -77,6 +79,7 @@ follow(Uid, Mid) ->
         end,
     mnesia:transaction(F).
 
+-spec unfollow(user_id(), moment_id()) -> tuple().
 unfollow(Uid, Mid) ->
     % TODO: return notification if unfollowing nonexistent things?
     ?LOG_INFO("Unfollow user id:~ts moment:~ts", [Uid, Mid]),
@@ -85,6 +88,7 @@ unfollow(Uid, Mid) ->
         end,
     mnesia:transaction(F).
 
+-spec remove_user(user_id()) -> tuple().
 remove_user(Uid) ->
     ?LOG_INFO("Remove user id:~ts", [Uid]),
     F = fun() ->
@@ -125,6 +129,7 @@ remove_user(Uid) ->
         end,
     mnesia:transaction(F).
 
+-spec set_new_admin(moment_id(), user_id()) -> tuple().
 set_new_admin(Mid, NewAdmin) ->
     ?LOG_INFO("Set new admin moment id:~ts user id:~ts", [Mid, NewAdmin]),
     F = fun() ->
@@ -133,6 +138,7 @@ set_new_admin(Mid, NewAdmin) ->
         end,
     mnesia:transaction(F).
 
+-spec insert_moment(moment_id(), moment_name(), user_id()) -> tuple().
 insert_moment(Mid, Name, Uid) ->
     ?LOG_INFO("Insert moment moment id:~ts name:~ts admin:~ts", [Mid, Name, Uid]),
     F = fun() ->
@@ -161,6 +167,7 @@ insert_moment(Mid, Name, Uid) ->
         end,
     mnesia:transaction(F).
 
+-spec remove_moment(moment_id()) -> tuple().
 remove_moment(Mid) ->
     ?LOG_INFO("Remove moment id:~ts", [Mid]),
     F = fun() ->
@@ -186,6 +193,7 @@ remove_moment(Mid) ->
         end,
     mnesia:transaction(F).
 
+-spec get_moments() -> list().
 get_moments() ->
     F = fun() ->
                 Pat = #moment{_ = '_'},
