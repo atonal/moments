@@ -202,7 +202,7 @@ remove_moment(Mid) ->
     {atomic, Res} = mnesia:transaction(F),
     Res.
 
--spec get_moments() -> list().
+-spec get_moments() -> [moment()].
 get_moments() ->
     F = fun() ->
                 Pat = #moment{_ = '_'},

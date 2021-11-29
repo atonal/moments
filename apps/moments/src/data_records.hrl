@@ -14,6 +14,14 @@
                  excl_days :: excl_days() | '_',
                  excl_time :: excl_time() | '_',
                  private :: private() | '_'}).
+-type moment() :: #moment{
+                     moment_id :: moment_id(),
+                     name :: moment_name(),
+                     next_moment :: next_moment(),
+                     interval :: interval(),
+                     excl_days :: excl_days(),
+                     excl_time :: excl_time(),
+                     private :: private()}.
 
 -type user_id() :: string().
 -type user_name() :: string().
