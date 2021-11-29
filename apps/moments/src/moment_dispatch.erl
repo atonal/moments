@@ -1,6 +1,7 @@
 -module(moment_dispatch).
 -export([start/0, init/0]).
 -import(moments_db_mnesia, [get_moments/0]).
+-import(data_utils, [is_passed/2]).
 -include_lib("kernel/include/logger.hrl").
 -include("data_records.hrl").
 
@@ -17,8 +18,7 @@ get_first_moments() ->
 
 -spec is_due(moment()) -> boolean().
 is_due(Moment) ->
-    % TODO:
-    Moment#moment.next_moment =:= 4.
+    is_passed(Moment, erlang:system_time(second)).
 
 -spec dispatch(moment()) -> no_return().
 dispatch(Moment) ->
