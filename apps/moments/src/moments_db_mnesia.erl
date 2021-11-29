@@ -43,7 +43,9 @@ create_tables(Nodes) ->
                                  {index, [#owns.device]},
                                  {type, bag}]).
 
--spec insert_user(user_id(), user_name()) -> tuple().
+-type db_ret() :: ok | {error, any()}.
+
+-spec insert_user(user_id(), user_name()) -> db_ret().
 insert_user(Uid, Name) ->
     ?LOG_INFO("Insert user id:~ts name:~ts", [Uid, Name]),
     F = fun() ->
@@ -56,9 +58,10 @@ insert_user(Uid, Name) ->
                         {error, user_exists}
                 end
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
--spec follow(user_id(), moment_id()) -> tuple().
+-spec follow(user_id(), moment_id()) -> db_ret().
 follow(Uid, Mid) ->
     ?LOG_INFO("Follow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
@@ -77,18 +80,20 @@ follow(Uid, Mid) ->
                         {error, moment_doesnt_exists}
                 end
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
--spec unfollow(user_id(), moment_id()) -> tuple().
+-spec unfollow(user_id(), moment_id()) -> db_ret().
 unfollow(Uid, Mid) ->
     % TODO: return notification if unfollowing nonexistent things?
     ?LOG_INFO("Unfollow user id:~ts moment:~ts", [Uid, Mid]),
     F = fun() ->
                 mnesia:delete_object({follows, Uid, Mid})
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
--spec remove_user(user_id()) -> tuple().
+-spec remove_user(user_id()) -> db_ret().
 remove_user(Uid) ->
     ?LOG_INFO("Remove user id:~ts", [Uid]),
     F = fun() ->
@@ -101,7 +106,7 @@ remove_user(Uid) ->
                                 ?LOG_ERROR("MomentsFollowed: ~ts", MomentsFollowed),
                                 lists:foreach(fun(#follows{moment=Mid}) ->
                                                       ?LOG_ERROR("Moment: ~ts", [Mid]),
-                                                      unfollow(Uid, Mid)
+                                                      ok = unfollow(Uid, Mid)
                                               end, MomentsFollowed)
                         end,
                         % handle administered moments: if no followers, remove moment, otherwise set new admin
@@ -114,10 +119,10 @@ remove_user(Uid) ->
                                                       Pat = #follows{moment = Moment, _ = '_'},
                                                       Followers = mnesia:match_object(Pat),
                                                       case Followers of
-                                                          [] -> remove_moment(Moment);
+                                                          [] -> ok = remove_moment(Moment);
                                                           [#follows{user=NewAdmin}|_] ->
                                                               mnesia:delete_object({admin_of, Uid, Moment}),
-                                                              set_new_admin(Moment, NewAdmin)
+                                                              ok = set_new_admin(Moment, NewAdmin)
                                                       end
                                               end, MomentsAdminOf)
                         end,
@@ -127,18 +132,20 @@ remove_user(Uid) ->
                         {error, user_doesnt_exists}
                 end
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
--spec set_new_admin(moment_id(), user_id()) -> tuple().
+-spec set_new_admin(moment_id(), user_id()) -> db_ret().
 set_new_admin(Mid, NewAdmin) ->
     ?LOG_INFO("Set new admin moment id:~ts user id:~ts", [Mid, NewAdmin]),
     F = fun() ->
                 AdminOf = #admin_of{user=NewAdmin, moment=Mid},
                 mnesia:write(AdminOf)
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
--spec insert_moment(moment_id(), moment_name(), user_id()) -> tuple().
+-spec insert_moment(moment_id(), moment_name(), user_id()) -> db_ret().
 insert_moment(Mid, Name, Uid) ->
     ?LOG_INFO("Insert moment moment id:~ts name:~ts admin:~ts", [Mid, Name, Uid]),
     F = fun() ->
@@ -165,9 +172,10 @@ insert_moment(Mid, Name, Uid) ->
                         {error, moment_exists}
                 end
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
--spec remove_moment(moment_id()) -> tuple().
+-spec remove_moment(moment_id()) -> db_ret().
 remove_moment(Mid) ->
     ?LOG_INFO("Remove moment id:~ts", [Mid]),
     F = fun() ->
@@ -191,7 +199,8 @@ remove_moment(Mid) ->
                         {error, moment_doesnt_exists}
                 end
         end,
-    mnesia:transaction(F).
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
 -spec get_moments() -> list().
 get_moments() ->
