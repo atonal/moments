@@ -2,25 +2,16 @@
 -include("../src/data_records.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
-is_passed_test() ->
-    Moment = #moment{ next_moment=1 },
-    ?assert(data_utils:is_passed(Moment, 2)).
-is_passed_equal_test() ->
-    Moment = #moment{ next_moment=1 },
-    ?assertNot(data_utils:is_passed(Moment, 1)).
-is_passed_greater_test() ->
-    Moment = #moment{ next_moment=2 },
-    ?assertNot(data_utils:is_passed(Moment, 1)).
+is_passed_test_() ->
+    {"is_passed tests", is_passed()}.
+is_passed() ->
+    [{"passed", ?_assert(data_utils:is_passed(#moment{ next_moment=1 }, 2))},
+     {"equals", ?_assertNot(data_utils:is_passed(#moment{ next_moment=1 }, 1))},
+     {"not passed", ?_assertNot(data_utils:is_passed(#moment{ next_moment=2 }, 1))}].
 
-is_before_test() ->
-    Moment1 = #moment{ next_moment=1 },
-    Moment2 = #moment{ next_moment=2 },
-    ?assert(data_utils:is_before(Moment1, Moment2)).
-is_before_equal_test() ->
-    Moment1 = #moment{ next_moment=1 },
-    Moment2 = #moment{ next_moment=1 },
-    ?assertNot(data_utils:is_before(Moment1, Moment2)).
-is_before_greater_test() ->
-    Moment1 = #moment{ next_moment=2 },
-    Moment2 = #moment{ next_moment=1 },
-    ?assertNot(data_utils:is_before(Moment1, Moment2)).
+is_before_test_() ->
+    {"is before tests", is_before()}.
+is_before() ->
+    [{"before", ?_assert(data_utils:is_before(#moment{ next_moment=1 }, #moment{ next_moment=2 }))},
+     {"equals", ?_assertNot(data_utils:is_before(#moment{ next_moment=1 }, #moment{ next_moment=1 }))},
+     {"after", ?_assertNot(data_utils:is_before(#moment{ next_moment=2 }, #moment{ next_moment=1 }))}].
