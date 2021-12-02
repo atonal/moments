@@ -2,8 +2,11 @@
 -export([start/0, init/0]).
 -import(moments_db_mnesia, [get_moments/0]).
 -include_lib("kernel/include/logger.hrl").
--include_lib("eunit/include/eunit.hrl").
 -include("data_records.hrl").
+
+-ifdef(testing).
+-export([order_moments/1]).
+-endif.
 
 start() ->
     spawn(?MODULE, init, []).
@@ -60,15 +63,3 @@ loop(Moments, Timers) ->
         _ ->
             loop(Moments, Timers)
     end.
-
-%% eunit
-order_moments_test_() ->
-    {"order moments tests", order_moments_t()}.
-order_moments_t() ->
-    [{"basic ordering",
-      ?_assertEqual(order_moments([#moment{ next_moment=3 },
-                                   #moment{ next_moment=1 },
-                                   #moment{ next_moment=2 }]),
-                    [#moment{ next_moment=1 },
-                     #moment{ next_moment=2 },
-                     #moment{ next_moment=3 }])}].
