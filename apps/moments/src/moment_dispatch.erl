@@ -1,6 +1,6 @@
 -module(moment_dispatch).
--export([start/0, init/0]).
--import(moments_db_mnesia, [get_moments/0]).
+-behavior(gen_statem).
+-define(NAME, moment_dispatch).
 -include_lib("kernel/include/logger.hrl").
 -include("data_records.hrl").
 
@@ -8,16 +8,54 @@
 -export([order_moments/1]).
 -endif.
 
-start() ->
-    spawn(?MODULE, init, []).
+-export([start_link/0, stop/0]).
+-export([add_moments/1]).
+-export([init/1,callback_mode/0]).
+-export([dispatcher/3]).
 
-init() ->
-    Moments = get_first_moments(),
-    loop(Moments, []).
+%% API
+start_link() ->
+    gen_statem:start_link({local, ?NAME}, ?MODULE, [], []).
 
--spec get_first_moments() -> [moment()].
-get_first_moments() ->
-    get_moments().
+stop() ->
+    gen_statem:stop(?NAME).
+
+-spec add_moments([moment()]) -> ok.
+add_moments(Moments) ->
+    gen_statem:cast(?NAME, {add_moments, Moments}).
+
+%% Mandatory callback functions
+init([]) ->
+    Data = get_moments(10),
+    Timeout = get_next_timeout(Data),
+    {ok, dispatcher, Data, [{state_timeout, Timeout, check_moments}]}.
+
+callback_mode() -> state_functions.
+
+%% State callback functions
+dispatcher(cast, {add_moments, Moments}, Data) ->
+    NewList = order_moments(Data ++ Moments),
+    Timeout = get_next_timeout(NewList),
+    {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
+dispatcher(state_timeout, check_moments, Data) ->
+    Rest = dispatch_moments(Data),
+    More = get_moments(length(Data) - length(Rest)),
+    NewList = order_moments(Rest ++ More),
+    Timeout = get_next_timeout(NewList),
+    {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
+
+%% Module functions
+-spec get_next_timeout([moment()]) -> integer().
+get_next_timeout(_) ->
+    % TODO: implement
+    10000.
+
+-spec get_moments(integer()) -> [moment()].
+get_moments(0) ->
+    [];
+get_moments(_N) ->
+    % TODO: get only N moments
+    moments_db_mnesia:get_moments().
 
 -spec is_due(moment()) -> boolean().
 is_due(Moment) ->
@@ -43,23 +81,3 @@ dispatch_moments([H|T] = Moments) ->
 -spec order_moments([moment()]) -> [moment()].
 order_moments(Moments) ->
     lists:sort(fun data_utils:is_before/2, Moments).
-
--spec loop([moment()], [reference()]) -> [moment()].
-loop(Moments, Timers) ->
-    receive
-        check_moments ->
-            Rest = dispatch_moments(Moments),
-            % TODO: get timeout from first
-            NewTimer = erlang:send_after(1000, self(), check_moments),
-            loop(Rest, [NewTimer]);
-        {add_moments, New} ->
-            NewList = order_moments(Moments ++ New),
-            ok = lists:foreach(
-              fun(T) -> erlang:cancel_timer(T, [{async, true}, {info, false}]) end,
-              Timers),
-            % TODO: get timeout from first
-            NewTimer = erlang:send_after(1000, self(), check_moments),
-            loop(NewList, [NewTimer]);
-        _ ->
-            loop(Moments, Timers)
-    end.
