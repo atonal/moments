@@ -63,10 +63,6 @@ get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
 
--spec is_due(moment(), integer()) -> boolean().
-is_due(Moment, Time) ->
-    data_utils:is_passed(Moment, Time).
-
 -spec dispatch(moment(), integer()) -> no_return().
 dispatch(Moment, _Time) ->
     % TODO: dispatch
@@ -76,7 +72,7 @@ dispatch(Moment, _Time) ->
 dispatch_moments([], _) ->
     [];
 dispatch_moments([H|T] = Moments, Time) ->
-    case is_due(H, Time) of
+    case data_utils:is_passed(H, Time) of
         true ->
             ok = dispatch(H, Time),
             dispatch_moments(T, Time);
