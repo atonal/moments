@@ -5,7 +5,7 @@
 -include("data_records.hrl").
 
 -ifdef(testing).
--export([order_moments/1]).
+-export([order_moments/1, get_next_timeout/2]).
 -endif.
 
 -export([start_link/0, stop/0]).
@@ -27,7 +27,7 @@ add_moments(Moments) ->
 %% Mandatory callback functions
 init([]) ->
     Data = get_moments(10),
-    Timeout = get_next_timeout(Data),
+    Timeout = get_next_timeout(Data, fun erlang:system_time/1),
     {ok, dispatcher, Data, [{state_timeout, Timeout, check_moments}]}.
 
 callback_mode() -> state_functions.
@@ -35,21 +35,26 @@ callback_mode() -> state_functions.
 %% State callback functions
 dispatcher(cast, {add_moments, Moments}, Data) ->
     NewList = order_moments(Data ++ Moments),
-    Timeout = get_next_timeout(NewList),
+    Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher(state_timeout, check_moments, Data) ->
     DispatchTime = erlang:system_time(second),
     Rest = dispatch_moments(Data, DispatchTime),
     More = get_moments(length(Data) - length(Rest)),
     NewList = order_moments(Rest ++ More),
-    Timeout = get_next_timeout(NewList),
+    Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
 
 %% Module functions
--spec get_next_timeout([moment()]) -> integer().
-get_next_timeout(_) ->
-    % TODO: implement
-    10000.
+-spec get_next_timeout([moment()], fun((erlang:time_unit()) -> integer())) -> timeout() | integer(). % state_timeout() = timeout() | integer()
+get_next_timeout([#moment{next_moment=Next}|_], TimeFun) ->
+    Now = TimeFun(second),
+    Timeout = Next - Now,
+    if Timeout > 0 -> Timeout * 1000;
+       Timeout =< 0 -> 0
+    end;
+get_next_timeout([], _) ->
+    infinity.
 
 -spec get_moments(integer()) -> [moment()].
 get_moments(0) ->
