@@ -38,7 +38,8 @@ dispatcher(cast, {add_moments, Moments}, Data) ->
     Timeout = get_next_timeout(NewList),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher(state_timeout, check_moments, Data) ->
-    Rest = dispatch_moments(Data),
+    DispatchTime = erlang:system_time(second),
+    Rest = dispatch_moments(Data, DispatchTime),
     More = get_moments(length(Data) - length(Rest)),
     NewList = order_moments(Rest ++ More),
     Timeout = get_next_timeout(NewList),
@@ -57,23 +58,23 @@ get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
 
--spec is_due(moment()) -> boolean().
-is_due(Moment) ->
-    data_utils:is_passed(Moment, erlang:system_time(second)).
+-spec is_due(moment(), integer()) -> boolean().
+is_due(Moment, Time) ->
+    data_utils:is_passed(Moment, Time).
 
--spec dispatch(moment()) -> no_return().
-dispatch(Moment) ->
+-spec dispatch(moment(), integer()) -> no_return().
+dispatch(Moment, _Time) ->
     % TODO: dispatch
     ?LOG_NOTICE("dispatching ~ts", [Moment]).
 
--spec dispatch_moments([moment()]) -> [moment()].
-dispatch_moments([]) ->
+-spec dispatch_moments([moment()], integer()) -> [moment()].
+dispatch_moments([], _) ->
     [];
-dispatch_moments([H|T] = Moments) ->
-    case is_due(H) of
+dispatch_moments([H|T] = Moments, Time) ->
+    case is_due(H, Time) of
         true ->
-            ok = dispatch(H),
-            dispatch_moments(T);
+            ok = dispatch(H, Time),
+            dispatch_moments(T, Time);
         false ->
             Moments
     end.
