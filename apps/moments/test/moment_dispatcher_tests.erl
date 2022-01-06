@@ -5,7 +5,8 @@
 -define(setup(F), {setup, fun start/0, fun stop/1, F}).
 
 start() ->
-    meck:new(mock, [non_strict]).
+    meck:new(mock, [non_strict]),
+    meck:expect(mock, dispatch, 2, ok).
 
 stop(_) ->
     meck:unload(mock).
@@ -49,13 +50,11 @@ dispatch_moments_test_() ->
        ?setup(fun unordered_list_some_moments_dispatched/1)}]}.
 
 empty_list(_) ->
-    meck:expect(mock, dispatch, 2, ok),
     [?_assertEqual([], moment_dispatcher:dispatch_moments([], 1, fun mock:dispatch/2)),
      ?_assertEqual(0, meck:num_calls(mock, dispatch, '_')),
      ?_assert(meck:validate(mock))].
 
 one_moment_dispatched(_) ->
-    meck:expect(mock, dispatch, 2, ok),
     [?_assertEqual([], moment_dispatcher:dispatch_moments([#moment{ next_moment=1 }],
                                                           3,
                                                           fun mock:dispatch/2)),
@@ -63,7 +62,6 @@ one_moment_dispatched(_) ->
      ?_assert(meck:validate(mock))].
 
 all_moments_dispatched(_) ->
-    meck:expect(mock, dispatch, 2, ok),
     [?_assertEqual([], moment_dispatcher:dispatch_moments([#moment{ next_moment=1 },
                                                            #moment{ next_moment=2 }],
                                                           3,
@@ -74,7 +72,6 @@ all_moments_dispatched(_) ->
      ?_assert(meck:validate(mock))].
 
 no_moments_dispatched(_) ->
-    meck:expect(mock, dispatch, 2, ok),
     [?_assertEqual([#moment{ next_moment=4 },
                     #moment{ next_moment=5 }],
                    moment_dispatcher:dispatch_moments([#moment{ next_moment=4 },
@@ -85,7 +82,6 @@ no_moments_dispatched(_) ->
      ?_assert(meck:validate(mock))].
 
 some_moments_dispatched(_) ->
-    meck:expect(mock, dispatch, 2, ok),
     [?_assertEqual([#moment{ next_moment=3 },
                     #moment{ next_moment=4 }],
                    moment_dispatcher:dispatch_moments([#moment{ next_moment=1 },
@@ -100,7 +96,6 @@ some_moments_dispatched(_) ->
      ?_assert(meck:validate(mock))].
 
 unordered_list_some_moments_dispatched(_) ->
-    meck:expect(mock, dispatch, 2, ok),
     [?_assertEqual([#moment{ next_moment=3 },
                     #moment{ next_moment=1 },
                     #moment{ next_moment=4 }],
