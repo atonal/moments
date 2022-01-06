@@ -1,6 +1,6 @@
--module(moment_dispatch).
+-module(moment_dispatcher).
 -behavior(gen_statem).
--define(NAME, moment_dispatch).
+-define(NAME, moment_dispatcher).
 -include_lib("kernel/include/logger.hrl").
 -include("data_records.hrl").
 
