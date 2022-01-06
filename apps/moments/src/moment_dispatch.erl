@@ -39,7 +39,7 @@ dispatcher(cast, {add_moments, Moments}, Data) ->
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher(state_timeout, check_moments, Data) ->
     DispatchTime = erlang:system_time(second),
-    Rest = dispatch_moments(Data, DispatchTime),
+    Rest = dispatch_moments(Data, DispatchTime, fun dispatch/2),
     More = get_moments(length(Data) - length(Rest)),
     NewList = order_moments(Rest ++ More),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
@@ -68,14 +68,14 @@ dispatch(Moment, _Time) ->
     % TODO: dispatch
     ?LOG_NOTICE("dispatching ~ts", [Moment]).
 
--spec dispatch_moments([moment()], integer()) -> [moment()].
-dispatch_moments([], _) ->
+-spec dispatch_moments([moment()], integer(), fun((moment(), integer()) -> no_return())) -> [moment()].
+dispatch_moments([], _, _) ->
     [];
-dispatch_moments([H|T] = Moments, Time) ->
+dispatch_moments([H|T] = Moments, Time, DispatchFun) ->
     case data_utils:is_passed(H, Time) of
         true ->
-            ok = dispatch(H, Time),
-            dispatch_moments(T, Time);
+            ok = DispatchFun(H, Time),
+            dispatch_moments(T, Time, DispatchFun);
         false ->
             Moments
     end.
