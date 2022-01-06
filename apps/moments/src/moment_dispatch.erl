@@ -5,7 +5,7 @@
 -include("data_records.hrl").
 
 -ifdef(testing).
--export([order_moments/1, get_next_timeout/2]).
+-export([order_moments/1, get_next_timeout/2, dispatch_moments/3]).
 -endif.
 
 -export([start_link/0, stop/0]).
@@ -63,7 +63,7 @@ get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
 
--spec dispatch(moment(), integer()) -> no_return().
+-spec dispatch(moment(), integer()) -> any().
 dispatch(Moment, _Time) ->
     % TODO: dispatch
     ?LOG_NOTICE("dispatching ~ts", [Moment]).
