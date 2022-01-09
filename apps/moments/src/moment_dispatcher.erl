@@ -34,12 +34,14 @@ callback_mode() -> state_functions.
 
 %% State callback functions
 dispatcher(cast, {add_moments, Moments}, Data) ->
+    ?LOG_INFO("add moments: ~p", [Moments]),
     NewList = order_moments(Data ++ Moments),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher(state_timeout, check_moments, Data) ->
+    ?LOG_INFO("state_timeout: ~p", [Data]),
     DispatchTime = erlang:system_time(second),
-    Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/2),
+    Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/1),
     More = get_moments(length(Data) - length(Rest)),
     NewList = order_moments(Rest ++ More),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
@@ -50,6 +52,7 @@ dispatcher(state_timeout, check_moments, Data) ->
 get_next_timeout([#moment{next_moment=Next}|_], TimeFun) ->
     Now = TimeFun(second),
     Timeout = Next - Now,
+    ?LOG_INFO("Now: ~p, timeout: ~p", [Now, Next]),
     if Timeout > 0 -> Timeout * 1000;
        Timeout =< 0 -> 0
     end;
@@ -63,13 +66,14 @@ get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
 
--spec dispatch_moments([moment()], integer(), fun((moment(), integer()) -> no_return())) -> [moment()].
+-spec dispatch_moments([moment()], integer(), fun((moment()) -> any())) -> [moment()].
 dispatch_moments([], _, _) ->
     [];
 dispatch_moments([H|T] = Moments, Time, DispatchFun) ->
     case data_utils:is_passed(H, Time) of
         true ->
-            ok = DispatchFun(H, Time),
+            ?LOG_INFO("dispatching: ~p", [H]),
+            ok = DispatchFun(H),
             dispatch_moments(T, Time, DispatchFun);
         false ->
             Moments

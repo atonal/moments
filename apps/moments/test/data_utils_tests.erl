@@ -6,7 +6,7 @@ is_passed_test_() ->
     {"is_passed tests", is_passed()}.
 is_passed() ->
     [{"passed", ?_assert(data_utils:is_passed(#moment{ next_moment=1 }, 2))},
-     {"equals", ?_assertNot(data_utils:is_passed(#moment{ next_moment=1 }, 1))},
+     {"equals", ?_assert(data_utils:is_passed(#moment{ next_moment=1 }, 1))},
      {"not passed", ?_assertNot(data_utils:is_passed(#moment{ next_moment=2 }, 1))}].
 
 is_before_test_() ->

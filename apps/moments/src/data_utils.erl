@@ -5,7 +5,7 @@
 
 -spec is_passed(moment(), utc_time()) -> boolean().
 is_passed(Moment, Time) ->
-    Moment#moment.next_moment < Time.
+    Moment#moment.next_moment =< Time.
 
 -spec is_before(moment(), moment()) -> boolean().
 is_before(Moment1, Moment2) ->

@@ -2,9 +2,10 @@
 -include("data_records.hrl").
 -include_lib("kernel/include/logger.hrl").
 
--export([dispatch/2]).
+-export([dispatch/1]).
 
--spec dispatch(moment(), integer()) -> any().
-dispatch(Moment, _Time) ->
+-spec dispatch(moment()) -> any().
+dispatch(Moment) ->
     % TODO: dispatch
-    ?LOG_NOTICE("dispatching ~ts", [Moment]).
+    ?LOG_NOTICE("dispatching ~ts", [Moment]),
+    ok.
