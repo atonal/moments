@@ -10,6 +10,7 @@ all() -> [init_with_one_moment,
          ].
 
 init_per_testcase(_, Config) ->
+    meck:new(moment_dispatcher, [passthrough]),
     meck:new(moments_db_mnesia),
     meck:new(moment_dispatch),
     Config.
@@ -17,6 +18,8 @@ init_per_testcase(_, Config) ->
 end_per_testcase(_, _Config) ->
     true = meck:validate(moment_dispatch),
     true = meck:validate(moments_db_mnesia),
+    true = meck:validate(moment_dispatcher),
+    meck:unload(moment_dispatcher),
     meck:unload(moment_dispatch),
     meck:unload(moments_db_mnesia),
     ok.
@@ -40,7 +43,6 @@ init_with_one_moment(_Config) ->
     ok = moment_dispatcher:stop().
 
 add_one_moment_to_empty_queue(_Config) ->
-    meck:new(moment_dispatcher, [passthrough]),
     meck:expect(moments_db_mnesia, get_moments, 0, []),
     meck:expect(moment_dispatch, dispatch, 1, ok),
     _Pid = moment_dispatcher:start_link(),
@@ -53,7 +55,6 @@ add_one_moment_to_empty_queue(_Config) ->
     ok = moment_dispatcher:stop().
 
 add_one_moment_in_front_of_existing_moment(_Config) ->
-    meck:new(moment_dispatcher, [passthrough]),
     meck:expect(moments_db_mnesia, get_moments, 0,
                 meck:seq([[#moment{ moment_id="1", next_moment=erlang:system_time(second)+2 }], []])),
     meck:expect(moment_dispatch, dispatch, 1, ok),
