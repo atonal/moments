@@ -116,13 +116,21 @@ remove_user(Uid) ->
                                 ?LOG_ERROR("MomentsAdminOf: ~p", MomentsAdminOf),
                                 lists:foreach(fun(#admin_of{moment=Moment}) ->
                                                       ?LOG_ERROR("Moment: ~p", [Moment]),
+                                                      mnesia:delete_object({admin_of, Uid, Moment}),
+
                                                       Pat = #follows{moment = Moment, _ = '_'},
                                                       Followers = mnesia:match_object(Pat),
-                                                      case Followers of
-                                                          [] -> ok = remove_moment(Moment);
-                                                          [#follows{user=NewAdmin}|_] ->
-                                                              mnesia:delete_object({admin_of, Uid, Moment}),
-                                                              ok = set_new_admin(Moment, NewAdmin)
+                                                      AdminPat = #admin_of{moment = Moment, _ = '_'},
+                                                      Admins = mnesia:match_object(AdminPat),
+                                                      if Admins =:= [] ->
+                                                             case Followers of
+                                                                 [] ->
+                                                                     ok = remove_moment(Moment);
+                                                                 [#follows{user=NewAdmin}|_] ->
+                                                                     ok = set_new_admin(Moment, NewAdmin)
+                                                             end;
+                                                         Admins =/= [] ->
+                                                             ok
                                                       end
                                               end, MomentsAdminOf)
                         end,
