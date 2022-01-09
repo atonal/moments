@@ -7,5 +7,5 @@
 -spec dispatch(moment()) -> any().
 dispatch(Moment) ->
     % TODO: dispatch
-    ?LOG_NOTICE("dispatching ~ts", [Moment]),
+    ?LOG_NOTICE("dispatching ~p", [Moment]),
     ok.

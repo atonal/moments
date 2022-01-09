@@ -30,6 +30,7 @@ get_queue() ->
 
 %% Mandatory callback functions
 init([]) ->
+    ?LOG_DEBUG("~p init", [?NAME]),
     Data = get_moments(10),
     Timeout = get_next_timeout(Data, fun erlang:system_time/1),
     {ok, dispatcher, Data, [{state_timeout, Timeout, check_moments}]}.
