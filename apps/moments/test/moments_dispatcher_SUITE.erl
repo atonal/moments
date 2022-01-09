@@ -30,6 +30,8 @@ init_with_one_moment(_Config) ->
                 meck:seq([[#moment{ next_moment=erlang:system_time(second)+1 }], []])),
     meck:expect(moment_dispatch, dispatch, 1, ok),
     _Pid = moment_dispatcher:start_link(),
+    1 = length(moment_dispatcher:get_queue()),
     true = meck:called(moments_db_mnesia, get_moments, []),
-    ok = meck:wait(moment_dispatch, dispatch, 1, 5000),
+    ok = meck:wait(1, moment_dispatch, dispatch, 1, 5000),
+    0 = length(moment_dispatcher:get_queue()),
     ok = moment_dispatcher:stop().

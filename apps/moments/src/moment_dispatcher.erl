@@ -9,7 +9,7 @@
 -endif.
 
 -export([start_link/0, stop/0]).
--export([add_moments/1]).
+-export([add_moments/1, get_queue/0]).
 -export([init/1,callback_mode/0]).
 -export([dispatcher/3]).
 
@@ -23,6 +23,10 @@ stop() ->
 -spec add_moments([moment()]) -> ok.
 add_moments(Moments) ->
     gen_statem:cast(?NAME, {add_moments, Moments}).
+
+-spec get_queue() -> [moment()].
+get_queue() ->
+    gen_statem:call(?NAME, get_queue, 5000).
 
 %% Mandatory callback functions
 init([]) ->
@@ -38,6 +42,8 @@ dispatcher(cast, {add_moments, Moments}, Data) ->
     NewList = order_moments(Data ++ Moments),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
+dispatcher({call, From}, get_queue, Data) ->
+    {keep_state_and_data, [{reply,From,Data}]};
 dispatcher(state_timeout, check_moments, Data) ->
     ?LOG_INFO("state_timeout: ~p", [Data]),
     DispatchTime = erlang:system_time(second),
