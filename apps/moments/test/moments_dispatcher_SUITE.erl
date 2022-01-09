@@ -4,7 +4,8 @@
 
 -compile(export_all).
 
-all() -> [init_with_one_moment].
+all() -> [init_with_one_moment,
+          add_one_moment_to_empty_queue].
 
 init_per_testcase(_, Config) ->
     meck:new(moments_db_mnesia),
@@ -32,6 +33,20 @@ init_with_one_moment(_Config) ->
     _Pid = moment_dispatcher:start_link(),
     1 = length(moment_dispatcher:get_queue()),
     true = meck:called(moments_db_mnesia, get_moments, []),
+    ok = meck:wait(1, moment_dispatch, dispatch, 1, 5000),
+    0 = length(moment_dispatcher:get_queue()),
+    ok = moment_dispatcher:stop().
+
+add_one_moment_to_empty_queue(_Config) ->
+    meck:new(moment_dispatcher, [passthrough]),
+    meck:expect(moments_db_mnesia, get_moments, 0, []),
+    meck:expect(moment_dispatch, dispatch, 1, ok),
+    _Pid = moment_dispatcher:start_link(),
+    0 = length(moment_dispatcher:get_queue()),
+    true = meck:called(moments_db_mnesia, get_moments, []),
+    ok = moment_dispatcher:add_moments([#moment{ next_moment=erlang:system_time(second)+1 }]),
+    ok = meck:wait(1, moment_dispatcher, dispatcher, [cast, {add_moments, '_'}, '_'], 500),
+    1 = length(moment_dispatcher:get_queue()),
     ok = meck:wait(1, moment_dispatch, dispatch, 1, 5000),
     0 = length(moment_dispatcher:get_queue()),
     ok = moment_dispatcher:stop().
