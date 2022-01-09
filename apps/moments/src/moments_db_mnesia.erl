@@ -16,7 +16,7 @@
 init(Nodes) ->
     case mnesia:change_table_copy_type(schema, node(), disc_copies) of
         {aborted, {already_exists, schema, Node, disc_copies}} ->
-            ?LOG_NOTICE("exists ~ts", [Node]);
+            ?LOG_NOTICE("exists ~p", [Node]);
         {atomic, ok} ->
             ?LOG_NOTICE("schema copy type changed OK"),
             create_tables(Nodes)
@@ -47,14 +47,14 @@ create_tables(Nodes) ->
 
 -spec insert_user(user_id(), user_name()) -> db_ret().
 insert_user(Uid, Name) ->
-    ?LOG_INFO("Insert user id:~ts name:~ts", [Uid, Name]),
+    ?LOG_INFO("Insert user id:~p name:~p", [Uid, Name]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =:= [] of
                     true ->
                         User = #user{user_id=Uid, name=Name},
                         mnesia:write(User);
                     false ->
-                        ?LOG_ERROR("User ~ts already exists", [Uid]),
+                        ?LOG_ERROR("User ~p already exists", [Uid]),
                         {error, user_exists}
                 end
         end,
@@ -63,7 +63,7 @@ insert_user(Uid, Name) ->
 
 -spec follow(user_id(), moment_id()) -> db_ret().
 follow(Uid, Mid) ->
-    ?LOG_INFO("Follow user id:~ts moment:~ts", [Uid, Mid]),
+    ?LOG_INFO("Follow user id:~p moment:~p", [Uid, Mid]),
     F = fun() ->
                 case mnesia:read({moment, Mid}) =/= [] of
                     true ->
@@ -72,11 +72,11 @@ follow(Uid, Mid) ->
                                 Follow = #follows{user=Uid, moment=Mid},
                                 mnesia:write(Follow);
                             false ->
-                                ?LOG_ERROR("User ~ts doesn't exist", [Uid]),
+                                ?LOG_ERROR("User ~p doesn't exist", [Uid]),
                                 {error, user_doesnt_exists}
                         end;
                     false ->
-                        ?LOG_ERROR("Moment ~ts doesn't exist", [Mid]),
+                        ?LOG_ERROR("Moment ~p doesn't exist", [Mid]),
                         {error, moment_doesnt_exists}
                 end
         end,
@@ -86,7 +86,7 @@ follow(Uid, Mid) ->
 -spec unfollow(user_id(), moment_id()) -> db_ret().
 unfollow(Uid, Mid) ->
     % TODO: return notification if unfollowing nonexistent things?
-    ?LOG_INFO("Unfollow user id:~ts moment:~ts", [Uid, Mid]),
+    ?LOG_INFO("Unfollow user id:~p moment:~p", [Uid, Mid]),
     F = fun() ->
                 mnesia:delete_object({follows, Uid, Mid})
         end,
@@ -95,7 +95,7 @@ unfollow(Uid, Mid) ->
 
 -spec remove_user(user_id()) -> db_ret().
 remove_user(Uid) ->
-    ?LOG_INFO("Remove user id:~ts", [Uid]),
+    ?LOG_INFO("Remove user id:~p", [Uid]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =/= [] of
                     true ->
@@ -103,9 +103,9 @@ remove_user(Uid) ->
                         case mnesia:read({follows, Uid}) of
                             [] -> ?LOG_ERROR("No moments to follow");
                             MomentsFollowed ->
-                                ?LOG_ERROR("MomentsFollowed: ~ts", MomentsFollowed),
+                                ?LOG_ERROR("MomentsFollowed: ~p", MomentsFollowed),
                                 lists:foreach(fun(#follows{moment=Mid}) ->
-                                                      ?LOG_ERROR("Moment: ~ts", [Mid]),
+                                                      ?LOG_ERROR("Moment: ~p", [Mid]),
                                                       ok = unfollow(Uid, Mid)
                                               end, MomentsFollowed)
                         end,
@@ -113,9 +113,9 @@ remove_user(Uid) ->
                         case mnesia:read({admin_of, Uid}) of
                             [] -> ?LOG_ERROR("No moments to admin");
                             MomentsAdminOf ->
-                                ?LOG_ERROR("MomentsAdminOf: ~ts", MomentsAdminOf),
+                                ?LOG_ERROR("MomentsAdminOf: ~p", MomentsAdminOf),
                                 lists:foreach(fun(#admin_of{moment=Moment}) ->
-                                                      ?LOG_ERROR("Moment: ~ts", [Moment]),
+                                                      ?LOG_ERROR("Moment: ~p", [Moment]),
                                                       Pat = #follows{moment = Moment, _ = '_'},
                                                       Followers = mnesia:match_object(Pat),
                                                       case Followers of
@@ -128,7 +128,7 @@ remove_user(Uid) ->
                         end,
                         mnesia:delete({user, Uid});
                     false ->
-                        ?LOG_ERROR("No user ~ts to delete", [Uid]),
+                        ?LOG_ERROR("No user ~p to delete", [Uid]),
                         {error, user_doesnt_exists}
                 end
         end,
@@ -137,7 +137,7 @@ remove_user(Uid) ->
 
 -spec set_new_admin(moment_id(), user_id()) -> db_ret().
 set_new_admin(Mid, NewAdmin) ->
-    ?LOG_INFO("Set new admin moment id:~ts user id:~ts", [Mid, NewAdmin]),
+    ?LOG_INFO("Set new admin moment id:~p user id:~p", [Mid, NewAdmin]),
     F = fun() ->
                 AdminOf = #admin_of{user=NewAdmin, moment=Mid},
                 mnesia:write(AdminOf)
@@ -147,7 +147,7 @@ set_new_admin(Mid, NewAdmin) ->
 
 -spec insert_moment(moment_id(), moment_name(), user_id()) -> db_ret().
 insert_moment(Mid, Name, Uid) ->
-    ?LOG_INFO("Insert moment moment id:~ts name:~ts admin:~ts", [Mid, Name, Uid]),
+    ?LOG_INFO("Insert moment moment id:~p name:~p admin:~p", [Mid, Name, Uid]),
     F = fun() ->
                 case mnesia:read({moment, Mid}) =:= [] of
                     true ->
@@ -164,11 +164,11 @@ insert_moment(Mid, Name, Uid) ->
                                 AdminOf = #admin_of{user=Uid, moment=Mid},
                                 mnesia:write(AdminOf);
                             false ->
-                                ?LOG_ERROR("User ~ts doesn't exist", [Uid]),
+                                ?LOG_ERROR("User ~p doesn't exist", [Uid]),
                                 {error, user_doesnt_exists}
                         end;
                     false ->
-                        ?LOG_ERROR("Moment ~ts already exists", [Mid]),
+                        ?LOG_ERROR("Moment ~p already exists", [Mid]),
                         {error, moment_exists}
                 end
         end,
@@ -177,7 +177,7 @@ insert_moment(Mid, Name, Uid) ->
 
 -spec remove_moment(moment_id()) -> db_ret().
 remove_moment(Mid) ->
-    ?LOG_INFO("Remove moment id:~ts", [Mid]),
+    ?LOG_INFO("Remove moment id:~p", [Mid]),
     F = fun() ->
                 case mnesia:read({moment, Mid}) =/= [] of
                     true ->
@@ -195,7 +195,7 @@ remove_moment(Mid) ->
                                               mnesia:delete_object(X)
                                       end, Followers);
                     false ->
-                        ?LOG_ERROR("No moment ~ts to delete", [Mid]),
+                        ?LOG_ERROR("No moment ~p to delete", [Mid]),
                         {error, moment_doesnt_exists}
                 end
         end,
