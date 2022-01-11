@@ -30,11 +30,17 @@ init([]) ->
                  intensity => 1,
                  period => 5},
     ChildSpecs = [#{id => moment_dispatcher,
-                  start => {moment_dispatcher, start_link, []},
-                  restart => permanent,
-                  shutdown => brutal_kill,
-                  type => worker,
-                  modules => [moment_dispatcher]}],
+                    start => {moment_dispatcher, start_link, []},
+                    restart => permanent,
+                    shutdown => brutal_kill,
+                    type => worker,
+                    modules => [moment_dispatcher]},
+                  #{id => watcher,
+                    start => {watcher, start_link, []},
+                    restart => permanent,
+                    shutdown => brutal_kill,
+                    type => worker,
+                    modules => [watcher]}],
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions
