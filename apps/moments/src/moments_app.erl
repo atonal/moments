@@ -13,7 +13,6 @@
 
 start(_StartType, _StartArgs) ->
     moments_db_mnesia:init([node()]),
-    moment_dispatcher:start_link(),
     watcher:start(),
     moments_sup:start_link().
 
