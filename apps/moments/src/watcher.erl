@@ -22,11 +22,12 @@ watch() ->
         {mnesia_table_event, Event} ->
             case Event of
                 {write, NewRecord, ActivityId} ->
-                    ?LOG_NOTICE("received ~p", [[NewRecord, ActivityId]]);
+                    ?LOG_NOTICE("received ~p", [[NewRecord, ActivityId]]),
+                    moment_dispatcher:add_moments([NewRecord]);
                 {delete_object, OldRecord, ActivityId} ->
-                    ?LOG_NOTICE("received ~p", [[OldRecord, ActivityId]]);
+                    ?LOG_NOTICE("received delete_object ~p", [[OldRecord, ActivityId]]);
                 {delete, {Tab, Key}, ActivityId} ->
-                    ?LOG_NOTICE("received ~p", [[{Tab, Key}, ActivityId]])
+                    ?LOG_NOTICE("received delete ~p", [[{Tab, Key}, ActivityId]])
             end,
             watch();
         Unknown ->

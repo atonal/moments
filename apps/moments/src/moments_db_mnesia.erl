@@ -163,7 +163,7 @@ insert_moment(Mid, Name, Uid) ->
                             true ->
                                 Moment = #moment{moment_id=Mid,
                                                  name=Name,
-                                                 next_moment=1,
+                                                 next_moment=erlang:system_time(second)+2,
                                                  interval=1,
                                                  excl_days=[],
                                                  excl_time=[],

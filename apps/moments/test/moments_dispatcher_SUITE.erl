@@ -56,7 +56,9 @@ add_one_moment_to_empty_queue(_Config) ->
 
 add_one_moment_in_front_of_existing_moment(_Config) ->
     meck:expect(moments_db_mnesia, get_moments, 0,
-                meck:seq([[#moment{ moment_id="1", next_moment=erlang:system_time(second)+2 }], []])),
+                meck:seq([[#moment{ moment_id="1", next_moment=erlang:system_time(second)+2 }],
+                          [#moment{ moment_id="1", next_moment=erlang:system_time(second)+2 }],
+                          []])),
     meck:expect(moment_dispatch, dispatch, 1, ok),
     _Pid = moment_dispatcher:start_link(),
     1 = length(moment_dispatcher:get_queue()),

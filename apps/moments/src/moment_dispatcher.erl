@@ -48,9 +48,9 @@ dispatcher({call, From}, get_queue, Data) ->
 dispatcher(state_timeout, check_moments, Data) ->
     ?LOG_INFO("state_timeout: ~p", [Data]),
     DispatchTime = erlang:system_time(second),
-    Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/1),
-    More = get_moments(length(Data) - length(Rest)),
-    NewList = order_moments(Rest ++ More),
+    _Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/1),
+    More = get_moments(10),
+    NewList = order_moments(More),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
 
@@ -67,8 +67,6 @@ get_next_timeout([], _) ->
     infinity.
 
 -spec get_moments(integer()) -> [moment()].
-get_moments(0) ->
-    [];
 get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
