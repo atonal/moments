@@ -55,7 +55,9 @@ dispatcher(state_timeout, check_moments, Data) ->
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
 
 %% Module functions
--spec get_next_timeout([moment()], fun((erlang:time_unit()) -> integer())) -> timeout() | integer(). % state_timeout() = timeout() | integer()
+-spec get_next_timeout([moment()], TimeFun) -> StateTimeout when
+      StateTimeout :: timeout() | integer(), % state_timeout from OTP
+      TimeFun :: fun((erlang:time_unit()) -> integer()).
 get_next_timeout([#moment{next_moment=Next}|_], TimeFun) ->
     Now = TimeFun(second),
     Timeout = Next - Now,
@@ -71,7 +73,8 @@ get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
 
--spec dispatch_moments([moment()], integer(), fun((moment()) -> any())) -> [moment()].
+-spec dispatch_moments([moment()], integer(), DispFun) -> [moment()] when
+      DispFun :: fun((moment()) -> any()).
 dispatch_moments([], _, _) ->
     [];
 dispatch_moments([H|T] = Moments, Time, DispatchFun) ->
