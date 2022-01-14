@@ -1,4 +1,4 @@
--module(moments_dispatcher_SUITE).
+-module(moment_dispatcher_SUITE).
 -include("../src/data_records.hrl").
 -include_lib("common_test/include/ct.hrl").
 
