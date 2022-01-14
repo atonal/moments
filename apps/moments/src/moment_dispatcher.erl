@@ -44,6 +44,7 @@ dispatcher(cast, {add_moments, Moments}, Data) ->
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher({call, From}, get_queue, Data) ->
+    ?LOG_DEBUG("get queue: ~p", [Data]),
     {keep_state_and_data, [{reply,From,Data}]};
 dispatcher(state_timeout, check_moments, Data) ->
     ?LOG_INFO("state_timeout: ~p", [Data]),
