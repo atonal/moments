@@ -27,7 +27,7 @@ gen_moment(Next) ->
        moment_id="id1",
        name="name 1",
        next_moment=Next,
-       interval=1,
+       interval=daily,
        excl_days=[],
        excl_time=[],
        private=false}.

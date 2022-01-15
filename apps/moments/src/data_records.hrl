@@ -3,7 +3,7 @@
 -type moment_id() :: string().
 -type moment_name() :: string().
 -type next_moment() :: utc_time().
--type interval() :: integer().
+-type interval() :: debug | hourly | daily | weekly | monthly | yearly.
 -type excl_days() :: list().
 -type excl_time() :: list().
 -type private() :: boolean().

@@ -32,7 +32,7 @@ verify_moment(Mid, Name) ->
     {atomic, [#moment{
                  moment_id=Mid,
                  name=Name,
-                 interval=1,
+                 interval=daily,
                  excl_days=[],
                  excl_time=[],
                  private=false}]} = mnesia:transaction(F).
