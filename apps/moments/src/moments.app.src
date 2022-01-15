@@ -9,7 +9,7 @@
     mnesia
    ]},
   {env,[]},
-  {modules, [moments_app, moments_sup, moments_db_mnesia, watcher]},
+  {modules, [moments_app, moments_sup, moments_db_mnesia, watcher, logger_handler]},
 
   {licenses, ["Apache 2.0"]},
   {links, []}

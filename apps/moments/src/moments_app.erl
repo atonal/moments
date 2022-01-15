@@ -13,7 +13,9 @@
 
 start(_StartType, _StartArgs) ->
     moments_db_mnesia:init([node()]),
-    moments_sup:start_link().
+    R = {ok, _Pid} = moments_sup:start_link(),
+    ok = gen_event:add_handler(moment_man, logger_handler, []),
+    R.
 
 stop(_State) ->
     ok.
