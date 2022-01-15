@@ -8,6 +8,8 @@
          remove_user/1,
          insert_moment/3,
          remove_moment/1,
+         consume_moment/1,
+         get_moment/1,
          set_new_admin/2,
          follow/2,
          unfollow/2,
@@ -204,6 +206,39 @@ remove_moment(Mid) ->
                                       end, Followers);
                     false ->
                         ?LOG_ERROR("No moment ~p to delete", [Mid]),
+                        {error, moment_doesnt_exists}
+                end
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
+
+-spec consume_moment(moment_id()) -> db_ret().
+consume_moment(Mid) ->
+    ?LOG_INFO("consume moment id:~p", [Mid]),
+    F = fun() ->
+                case mnesia:read(moment, Mid, write) of
+                    [M] ->
+                        NewNextMoment = data_utils:get_next_moment(M),
+                        NewMoment = M#moment{next_moment=NewNextMoment},
+                        mnesia:write(NewMoment);
+                    [] ->
+                        ?LOG_ERROR("No moment ~p to consume", [Mid]),
+                        {error, moment_doesnt_exists}
+                end
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
+
+-type db_val_ret() :: {ok, any()} | {error, any()}.
+-spec get_moment(moment_id()) -> db_val_ret().
+get_moment(Mid) ->
+    ?LOG_INFO("get moment id:~p", [Mid]),
+    F = fun() ->
+                case mnesia:read({moment, Mid}) of
+                    [M] ->
+                        {ok, M};
+                    [] ->
+                        ?LOG_ERROR("No moment ~p to get", [Mid]),
                         {error, moment_doesnt_exists}
                 end
         end,

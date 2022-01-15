@@ -1,5 +1,6 @@
 -module(moments_db_mnesia_SUITE).
 -include_lib("common_test/include/ct.hrl").
+-include("../src/data_records.hrl").
 
 -compile(export_all).
 
@@ -22,7 +23,10 @@ all() -> [insert_user,
           set_new_admin,
           remove_nonexistent_moment,
           remove_moment,
-          remove_moment_remove_follows].
+          remove_moment_remove_follows,
+          get_moment,
+          consume_moment
+         ].
 
 init_per_testcase(_, Config) ->
     Config.
@@ -199,3 +203,19 @@ remove_moment_remove_follows(_Config) ->
     test_utils:verify_follow(Uid2, "moment1"),
     ok = moments_db_mnesia:remove_moment("moment1"),
     test_utils:verify_follow_empty(Uid2).
+
+get_moment(_Config) ->
+    Uid1 = "uid1",
+    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
+    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
+    {ok, #moment{moment_id = "moment1"}} = moments_db_mnesia:get_moment("moment1").
+
+consume_moment(_Config) ->
+    Uid1 = "uid1",
+    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
+    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
+    {ok, Moment} = moments_db_mnesia:get_moment("moment1"),
+    NextMoment = Moment#moment.next_moment,
+    ok = moments_db_mnesia:consume_moment("moment1"),
+    {ok, NewMoment} = moments_db_mnesia:get_moment("moment1"),
+    NewMoment = Moment#moment{next_moment = NextMoment + 86_400}.

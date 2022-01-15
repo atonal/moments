@@ -5,8 +5,8 @@
 -export([dispatch/1]).
 
 -spec dispatch(moment()) -> any().
-dispatch(Moment = #moment{moment_id = Id}) ->
+dispatch(Moment) ->
     % TODO: dispatch
     ?LOG_NOTICE("dispatching ~p", [Moment]),
-    moments_db_mnesia:remove_moment(Id),
+    moments_db_mnesia:consume_moment(Moment#moment.moment_id),
     ok.
