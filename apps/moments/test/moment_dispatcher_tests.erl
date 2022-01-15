@@ -11,27 +11,16 @@ start() ->
 stop(_) ->
     meck:unload(mock).
 
-order_moments_test_() ->
-    {"order moments tests", order_moments_t()}.
-order_moments_t() ->
-    [{"basic ordering",
-      ?_assertEqual(moment_dispatcher:order_moments([#moment{ next_moment=3 },
-                                   #moment{ next_moment=1 },
-                                   #moment{ next_moment=2 }]),
-                    [#moment{ next_moment=1 },
-                     #moment{ next_moment=2 },
-                     #moment{ next_moment=3 }])}].
-
 get_next_timeout_test_() ->
     {"get next timeout tests", get_next_timeout_t()}.
 get_next_timeout_t() ->
     [{"empty list",
       ?_assertEqual(infinity, moment_dispatcher:get_next_timeout([], fun(_) -> 1 end))},
     {"positive timeout",
-     ?_assertEqual(2000, moment_dispatcher:get_next_timeout([#moment{ next_moment=3 }],
+     ?_assertEqual(2000, moment_dispatcher:get_next_timeout([{id, #moment{ next_moment=3 }}],
                                                           fun(_) -> 1 end))},
     {"negative timeout",
-     ?_assertEqual(0, moment_dispatcher:get_next_timeout([#moment{ next_moment=1 }],
+     ?_assertEqual(0, moment_dispatcher:get_next_timeout([{id, #moment{ next_moment=1 }}],
                                                        fun(_) -> 2 end))}].
 
 dispatch_moments_test_() ->
@@ -55,15 +44,15 @@ empty_list(_) ->
      ?_assert(meck:validate(mock))].
 
 one_moment_dispatched(_) ->
-    [?_assertEqual([], moment_dispatcher:dispatch_moments([#moment{ next_moment=1 }],
+    [?_assertEqual([], moment_dispatcher:dispatch_moments([{id, #moment{ next_moment=1 }}],
                                                           3,
                                                           fun mock:dispatch/1)),
      ?_assertEqual(1, meck:num_calls(mock, dispatch, '_')),
      ?_assert(meck:validate(mock))].
 
 all_moments_dispatched(_) ->
-    [?_assertEqual([], moment_dispatcher:dispatch_moments([#moment{ next_moment=1 },
-                                                           #moment{ next_moment=2 }],
+    [?_assertEqual([], moment_dispatcher:dispatch_moments([{id, #moment{ next_moment=1 }},
+                                                           {id, #moment{ next_moment=2 }}],
                                                           3,
                                                           fun mock:dispatch/1)),
      ?_assertEqual(2, meck:num_calls(mock, dispatch, '_')),
@@ -72,22 +61,22 @@ all_moments_dispatched(_) ->
      ?_assert(meck:validate(mock))].
 
 no_moments_dispatched(_) ->
-    [?_assertEqual([#moment{ next_moment=4 },
-                    #moment{ next_moment=5 }],
-                   moment_dispatcher:dispatch_moments([#moment{ next_moment=4 },
-                                                       #moment{ next_moment=5 }],
+    [?_assertEqual([{id, #moment{ next_moment=4 }},
+                    {id, #moment{ next_moment=5 }}],
+                   moment_dispatcher:dispatch_moments([{id, #moment{ next_moment=4 }},
+                                                       {id, #moment{ next_moment=5 }}],
                                                       3,
                                                       fun mock:dispatch/1)),
      ?_assertEqual(0, meck:num_calls(mock, dispatch, '_')),
      ?_assert(meck:validate(mock))].
 
 some_moments_dispatched(_) ->
-    [?_assertEqual([#moment{ next_moment=3 },
-                    #moment{ next_moment=4 }],
-                   moment_dispatcher:dispatch_moments([#moment{ next_moment=1 },
-                                                       #moment{ next_moment=2 },
-                                                       #moment{ next_moment=3 },
-                                                       #moment{ next_moment=4 }],
+    [?_assertEqual([{id, #moment{ next_moment=3 }},
+                    {id, #moment{ next_moment=4 }}],
+                   moment_dispatcher:dispatch_moments([{id, #moment{ next_moment=1 }},
+                                                       {id, #moment{ next_moment=2 }},
+                                                       {id, #moment{ next_moment=3 }},
+                                                       {id, #moment{ next_moment=4 }}],
                                                       2,
                                                       fun mock:dispatch/1)),
      ?_assertEqual(2, meck:num_calls(mock, dispatch, '_')),
@@ -96,14 +85,14 @@ some_moments_dispatched(_) ->
      ?_assert(meck:validate(mock))].
 
 unordered_list_some_moments_dispatched(_) ->
-    [?_assertEqual([#moment{ next_moment=3 },
-                    #moment{ next_moment=1 },
-                    #moment{ next_moment=4 }],
-                   moment_dispatcher:dispatch_moments([#moment{ next_moment=1 },
-                                                       #moment{ next_moment=2 },
-                                                       #moment{ next_moment=3 },
-                                                       #moment{ next_moment=1 },
-                                                       #moment{ next_moment=4 }],
+    [?_assertEqual([{id, #moment{ next_moment=3 }},
+                    {id, #moment{ next_moment=1 }},
+                    {id, #moment{ next_moment=4 }}],
+                   moment_dispatcher:dispatch_moments([{id, #moment{ next_moment=1 }},
+                                                       {id, #moment{ next_moment=2 }},
+                                                       {id, #moment{ next_moment=3 }},
+                                                       {id, #moment{ next_moment=1 }},
+                                                       {id, #moment{ next_moment=4 }}],
                                                       2,
                                                       fun mock:dispatch/1)),
      ?_assertEqual(2, meck:num_calls(mock, dispatch, '_')),

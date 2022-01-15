@@ -5,7 +5,7 @@
 -include("data_records.hrl").
 
 -ifdef(testing).
--export([order_moments/1, get_next_timeout/2, dispatch_moments/3]).
+-export([get_next_timeout/2, dispatch_moments/3]).
 -endif.
 
 -export([start_link/0, stop/0]).
@@ -31,7 +31,7 @@ get_queue() ->
 %% Mandatory callback functions
 init([]) ->
     ?LOG_DEBUG("~p init", [?NAME]),
-    Data = get_moments(10),
+    Data = moments_orddict:from_list([{X#moment.moment_id, X} || X <- get_moments(10)]),
     Timeout = get_next_timeout(Data, fun erlang:system_time/1),
     {ok, dispatcher, Data, [{state_timeout, Timeout, check_moments}]}.
 
@@ -40,7 +40,7 @@ callback_mode() -> state_functions.
 %% State callback functions
 dispatcher(cast, {add_moments, Moments}, Data) ->
     ?LOG_INFO("add moments: ~p", [Moments]),
-    NewList = order_moments(Data ++ Moments),
+    NewList = moments_orddict:store_list([{X#moment.moment_id, X} || X <- Moments], Data),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher({call, From}, get_queue, Data) ->
@@ -50,16 +50,15 @@ dispatcher(state_timeout, check_moments, Data) ->
     ?LOG_INFO("state_timeout: ~p", [Data]),
     DispatchTime = erlang:system_time(second),
     _Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/1),
-    More = get_moments(10),
-    NewList = order_moments(More),
+    NewList = moments_orddict:from_list([{X#moment.moment_id, X} || X <- get_moments(10)]),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
 
 %% Module functions
--spec get_next_timeout([moment()], TimeFun) -> StateTimeout when
-      StateTimeout :: timeout() | integer(), % state_timeout from OTP
+-spec get_next_timeout(moments_orddict:orddict(), TimeFun) -> StateTimeout when
+      StateTimeout :: timeout() | integer(), % state_timeout from gen_statem
       TimeFun :: fun((erlang:time_unit()) -> integer()).
-get_next_timeout([#moment{next_moment=Next}|_], TimeFun) ->
+get_next_timeout([{_, #moment{next_moment=Next}}|_], TimeFun) ->
     Now = TimeFun(second),
     Timeout = Next - Now,
     ?LOG_INFO("Now: ~p, timeout: ~p", [Now, Next]),
@@ -74,20 +73,16 @@ get_moments(_N) ->
     % TODO: get only N moments
     moments_db_mnesia:get_moments().
 
--spec dispatch_moments([moment()], integer(), DispFun) -> [moment()] when
+-spec dispatch_moments(moments_orddict:orddict(), integer(), DispFun) -> [moment()] when
       DispFun :: fun((moment()) -> any()).
 dispatch_moments([], _, _) ->
     [];
-dispatch_moments([H|T] = Moments, Time, DispatchFun) ->
-    case data_utils:is_passed(H, Time) of
+dispatch_moments([{_,Moment}|T] = Moments, Time, DispatchFun) ->
+    case data_utils:is_passed(Moment, Time) of
         true ->
-            ?LOG_INFO("dispatching: ~p", [H]),
-            ok = DispatchFun(H),
+            ?LOG_INFO("dispatching: ~p", [Moment]),
+            ok = DispatchFun(Moment),
             dispatch_moments(T, Time, DispatchFun);
         false ->
             Moments
     end.
-
--spec order_moments([moment()]) -> [moment()].
-order_moments(Moments) ->
-    lists:sort(fun data_utils:is_before/2, Moments).
