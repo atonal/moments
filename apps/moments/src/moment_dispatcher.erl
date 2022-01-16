@@ -31,7 +31,7 @@ get_queue() ->
 %% Mandatory callback functions
 init([]) ->
     ?LOG_DEBUG("~p init", [?NAME]),
-    Data = moments_orddict:from_list([{X#moment.moment_id, X} || X <- get_moments(10)]),
+    Data = orddict_from_moment_list(get_moments(10)),
     Timeout = get_next_timeout(Data, fun erlang:system_time/1),
     {ok, dispatcher, Data, [{state_timeout, Timeout, check_moments}]}.
 
@@ -40,7 +40,7 @@ callback_mode() -> state_functions.
 %% State callback functions
 dispatcher(cast, {add_moments, Moments}, Data) ->
     ?LOG_INFO("add moments: ~p", [Moments]),
-    NewList = moments_orddict:store_list([{X#moment.moment_id, X} || X <- Moments], Data),
+    NewList = moments_orddict:store_list(moment_list_to_dict_list(Moments), Data),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher({call, From}, get_queue, Data) ->
@@ -50,11 +50,19 @@ dispatcher(state_timeout, check_moments, Data) ->
     ?LOG_INFO("state_timeout: ~p", [Data]),
     DispatchTime = erlang:system_time(second),
     _Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/1),
-    NewList = moments_orddict:from_list([{X#moment.moment_id, X} || X <- get_moments(10)]),
+    NewList = orddict_from_moment_list(get_moments(10)),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
 
 %% Module functions
+-spec orddict_from_moment_list([moment()]) -> moments_orddict:orddict().
+orddict_from_moment_list(List) ->
+    moments_orddict:from_list(moment_list_to_dict_list(List)).
+
+-spec moment_list_to_dict_list([moment()]) -> moments_orddict:orddict(moment_id(), moment()).
+moment_list_to_dict_list(Moments) ->
+    [{X#moment.moment_id, X} || X <- Moments].
+
 -spec get_next_timeout(moments_orddict:orddict(), TimeFun) -> StateTimeout when
       StateTimeout :: timeout() | integer(), % state_timeout from gen_statem
       TimeFun :: fun((erlang:time_unit()) -> integer()).
