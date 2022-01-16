@@ -9,7 +9,7 @@ is_passed(Moment, Time) ->
 
 -spec is_before(moment(), moment()) -> boolean().
 is_before(Moment1, Moment2) ->
-    Moment1#moment.next_moment < Moment2#moment.next_moment.
+    is_passed(Moment1, Moment2#moment.next_moment).
 
 -define(sec_to_min(S), (60 * S)).
 -define(sec_to_hour(S), (60 * ?sec_to_min(S))).
