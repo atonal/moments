@@ -7,6 +7,7 @@
          insert_user/2,
          remove_user/1,
          insert_moment/3,
+         insert_moment/8,
          remove_moment/1,
          consume_moment/1,
          get_moment/1,
@@ -157,6 +158,10 @@ set_new_admin(Mid, NewAdmin) ->
 
 -spec insert_moment(moment_id(), moment_name(), user_id()) -> db_ret().
 insert_moment(Mid, Name, Uid) ->
+    insert_moment(Mid, Name, erlang:system_time(second)+2, daily, [], [], false, Uid).
+
+-spec insert_moment(moment_id(), moment_name(), next_moment(), interval(), excl_days(), excl_time(), private(), user_id()) -> db_ret().
+insert_moment(Mid, Name, Next, Interval, ExclDays, ExclTime, Private, Uid) ->
     ?LOG_INFO("Insert moment moment id:~p name:~p admin:~p", [Mid, Name, Uid]),
     F = fun() ->
                 case mnesia:read({moment, Mid}) =:= [] of
@@ -165,11 +170,11 @@ insert_moment(Mid, Name, Uid) ->
                             true ->
                                 Moment = #moment{moment_id=Mid,
                                                  name=Name,
-                                                 next_moment=erlang:system_time(second)+2,
-                                                 interval=daily,
-                                                 excl_days=[],
-                                                 excl_time=[],
-                                                 private=false},
+                                                 next_moment=Next,
+                                                 interval=Interval,
+                                                 excl_days=ExclDays,
+                                                 excl_time=ExclTime,
+                                                 private=Private},
                                 mnesia:write(Moment),
                                 AdminOf = #admin_of{user=Uid, moment=Mid},
                                 mnesia:write(AdminOf);
