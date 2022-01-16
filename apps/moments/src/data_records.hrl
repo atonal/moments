@@ -1,6 +1,9 @@
 -type utc_time() :: integer().
+-type unique_id() :: non_neg_integer().
 
--type moment_id() :: string().
+-type id_type() :: moment | user | device.
+
+-type moment_id() :: unique_id().
 -type moment_name() :: string().
 -type next_moment() :: utc_time().
 -type interval() :: debug | hourly | daily | weekly | monthly | yearly.
@@ -23,12 +26,12 @@
                      excl_time :: excl_time(),
                      private :: private()}.
 
--type user_id() :: string().
+-type user_id() :: unique_id().
 -type user_name() :: string().
 -record(user, {user_id :: user_id() | '_',
               name :: user_name() | '_'}).
 
--type device_id() :: string().
+-type device_id() :: unique_id().
 -type device_name() :: string().
 -record(device, {device_id :: device_id() | '_',
                 name :: device_name() | '_'}).
@@ -41,3 +44,6 @@
 
 -record(owns, {user :: user_id() | '_',
          device :: device_id() | '_'}).
+
+-record(table_id, {table_name :: atom(),
+                   last_id :: non_neg_integer()}).

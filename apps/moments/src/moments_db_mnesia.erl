@@ -22,9 +22,22 @@ init(Nodes) ->
             ?LOG_NOTICE("exists ~p", [Node]);
         {atomic, ok} ->
             ?LOG_NOTICE("schema copy type changed OK"),
-            create_tables(Nodes)
+            create_tables(Nodes),
+            init_table_ids([moment, user, device])
     end,
-    mnesia:wait_for_tables([moment, user, device, follows, admin_of, owns], 5000).
+    mnesia:wait_for_tables([moment, user, device, follows, admin_of, owns, table_id], 5000).
+
+init_table_ids(TableNames) when is_list(TableNames)->
+    lists:foreach(fun init_table_id/1, TableNames).
+
+init_table_id(TableName) ->
+    Fun = fun() ->
+                  % TODO: should we check if it exists? It shouldn't..
+                  mnesia:write(table_id,
+                               #table_id{table_name=TableName, last_id=0},
+                               write)
+          end,
+    {atomic, ok} = mnesia:transaction(Fun).
 
 create_tables(Nodes) ->
     {atomic, ok} = mnesia:create_table(moment, [{attributes, record_info(fields, moment)},
@@ -44,7 +57,10 @@ create_tables(Nodes) ->
     {atomic, ok} = mnesia:create_table(owns, [{attributes, record_info(fields, owns)},
                                  {disc_copies, Nodes},
                                  {index, [#owns.device]},
-                                 {type, bag}]).
+                                 {type, bag}]),
+    {atomic, ok} = mnesia:create_table(table_id, [{attributes, record_info(fields, table_id)},
+                                 {disc_copies, Nodes}]).
+
 
 -type db_ret() :: ok | {error, any()}.
 
@@ -258,3 +274,7 @@ get_moments() ->
         end,
     {atomic, Res} = mnesia:transaction(F),
     Res.
+
+-spec generate_unique_id(id_type()) -> unique_id().
+generate_unique_id(Type) ->
+    mnesia:dirty_update_counter(table_id, Type, 1).

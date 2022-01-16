@@ -24,7 +24,7 @@ dump_all_tables([], Tables) ->
 
 gen_moment(Next) ->
     #moment{
-       moment_id="id1",
+       moment_id=1,
        name="name 1",
        next_moment=Next,
        interval=daily,
