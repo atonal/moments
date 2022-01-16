@@ -4,10 +4,10 @@
 -include_lib("kernel/include/logger.hrl").
 
 -export([init/1,
-         insert_user/2,
+         insert_user/1,
          remove_user/1,
-         insert_moment/3,
-         insert_moment/8,
+         insert_moment/2,
+         insert_moment/7,
          remove_moment/1,
          consume_moment/1,
          get_moment/1,
@@ -43,7 +43,8 @@ create_tables(Nodes) ->
     {atomic, ok} = mnesia:create_table(moment, [{attributes, record_info(fields, moment)},
                                  {disc_copies, Nodes}]),
     {atomic, ok} = mnesia:create_table(user, [{attributes, record_info(fields, user)},
-                                 {disc_copies, Nodes}]),
+                                 {disc_copies, Nodes},
+                                 {index, [#user.name]}]),
     {atomic, ok} = mnesia:create_table(device, [{attributes, record_info(fields, device)},
                                  {disc_copies, Nodes}]),
     {atomic, ok} = mnesia:create_table(follows, [{attributes, record_info(fields, follows)},
@@ -63,18 +64,30 @@ create_tables(Nodes) ->
 
 
 -type db_ret() :: ok | {error, any()}.
+-type db_id_ret() :: unique_id() | {error, any()}.
 
--spec insert_user(user_id(), user_name()) -> db_ret().
-insert_user(Uid, Name) ->
-    ?LOG_INFO("Insert user id:~p name:~p", [Uid, Name]),
+-spec insert_user(user_name()) -> db_id_ret().
+insert_user(Name) ->
+    ?LOG_INFO("Insert user with name:~p", [Name]),
     F = fun() ->
-                case mnesia:read({user, Uid}) =:= [] of
-                    true ->
-                        User = #user{user_id=Uid, name=Name},
-                        mnesia:write(User);
-                    false ->
-                        ?LOG_ERROR("User ~p already exists", [Uid]),
-                        {error, user_exists}
+                UserPat = #user{name = Name, _ = '_'},
+                Users = mnesia:match_object(UserPat),
+                if Users =:= [] ->
+                       Uid = generate_unique_id(user),
+                       ?LOG_INFO("User ID: ~p", [Uid]),
+                       case mnesia:read({user, Uid}) =:= [] of
+                           true ->
+                               User = #user{user_id=Uid, name=Name},
+                               mnesia:write(User),
+                               Uid;
+                           false ->
+                               % This shouldn't happen, but hey...
+                               ?LOG_ERROR("User with ID ~p already exists", [Uid]),
+                               {error, user_exists}
+                       end;
+                   Users =/= [] ->
+                       ?LOG_ERROR("User with name ~p already exists", [Name]),
+                       {error, user_exists}
                 end
         end,
     {atomic, Res} = mnesia:transaction(F),
@@ -172,17 +185,20 @@ set_new_admin(Mid, NewAdmin) ->
     {atomic, Res} = mnesia:transaction(F),
     Res.
 
--spec insert_moment(moment_id(), moment_name(), user_id()) -> db_ret().
-insert_moment(Mid, Name, Uid) ->
-    insert_moment(Mid, Name, erlang:system_time(second)+2, daily, [], [], false, Uid).
+% This is mostly for debug/testing
+-spec insert_moment(moment_name(), user_id()) -> db_id_ret().
+insert_moment(Name, Uid) ->
+    insert_moment(Name, erlang:system_time(second)+2, daily, [], [], false, Uid).
 
--spec insert_moment(moment_id(), moment_name(), next_moment(), interval(), excl_days(), excl_time(), private(), user_id()) -> db_ret().
-insert_moment(Mid, Name, Next, Interval, ExclDays, ExclTime, Private, Uid) ->
-    ?LOG_INFO("Insert moment moment id:~p name:~p admin:~p", [Mid, Name, Uid]),
+-spec insert_moment(moment_name(), next_moment(), interval(), excl_days(), excl_time(), private(), user_id()) -> db_id_ret().
+insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) ->
+    ?LOG_INFO("Insert moment name:~p admin:~p", [Name, Uid]),
     F = fun() ->
-                case mnesia:read({moment, Mid}) =:= [] of
+                case mnesia:read({user, Uid}) =/= [] of
                     true ->
-                        case mnesia:read({user, Uid}) =/= [] of
+                        Mid = generate_unique_id(moment),
+                        ?LOG_INFO("Moment ID: ~p", [Mid]),
+                        case mnesia:read({moment, Mid}) =:= [] of
                             true ->
                                 Moment = #moment{moment_id=Mid,
                                                  name=Name,
@@ -193,14 +209,16 @@ insert_moment(Mid, Name, Next, Interval, ExclDays, ExclTime, Private, Uid) ->
                                                  private=Private},
                                 mnesia:write(Moment),
                                 AdminOf = #admin_of{user=Uid, moment=Mid},
-                                mnesia:write(AdminOf);
+                                mnesia:write(AdminOf),
+                                Mid;
                             false ->
-                                ?LOG_ERROR("User ~p doesn't exist", [Uid]),
-                                {error, user_doesnt_exists}
+                                % This shouldn't happen, but hey...
+                                ?LOG_ERROR("Moment ~p already exists", [Mid]),
+                                {error, moment_exists}
                         end;
                     false ->
-                        ?LOG_ERROR("Moment ~p already exists", [Mid]),
-                        {error, moment_exists}
+                        ?LOG_ERROR("User ~p doesn't exist", [Uid]),
+                        {error, user_doesnt_exists}
                 end
         end,
     {atomic, Res} = mnesia:transaction(F),

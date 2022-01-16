@@ -8,7 +8,6 @@ all() -> [insert_user,
           insert_existing_user,
           insert_moment,
           insert_moment_user_doesnt_exist,
-          insert_existing_moment,
           follow_moment_doesnt_exist,
           follow_user_doesnt_exist,
           follow,
@@ -48,174 +47,152 @@ end_per_suite(_Config) ->
 
 % Tests
 insert_user(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    test_utils:verify_user("uid1", "Name 1").
+    Uid = moments_db_mnesia:insert_user("Name 1"),
+    test_utils:verify_user(Uid, "Name 1").
 
 insert_existing_user(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    test_utils:verify_user("uid1", "Name 1"),
-    {error, user_exists} = moments_db_mnesia:insert_user("uid1", "Name 2").
+    Uid = moments_db_mnesia:insert_user("Name 1"),
+    test_utils:verify_user(Uid, "Name 1"),
+    {error, user_exists} = moments_db_mnesia:insert_user("Name 1").
 
 insert_moment_user_doesnt_exist(_Config) ->
-    {error, user_doesnt_exists} = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1").
+    {error, user_doesnt_exists} = moments_db_mnesia:insert_moment("moment name 1", "uid1").
 
 insert_moment(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    test_utils:verify_moment("moment1", "moment name 1"),
-    test_utils:verify_admin_of("uid1", "moment1").
-
-insert_existing_moment(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    test_utils:verify_moment("moment1", "moment name 1"),
-    test_utils:verify_admin_of("uid1", "moment1"),
-    {error, moment_exists} = moments_db_mnesia:insert_moment("moment1", "moment name 2", "uid2").
+    Uid = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid),
+    test_utils:verify_moment(Mid, "moment name 1"),
+    test_utils:verify_admin_of(Uid, Mid).
 
 follow_moment_doesnt_exist(_Config) ->
     {error, moment_doesnt_exists} = moments_db_mnesia:follow("uid1", "moment1").
 
 follow_user_doesnt_exist(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    {error, user_doesnt_exists} = moments_db_mnesia:follow("uid2", "moment1").
+    Uid = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid),
+    {error, user_doesnt_exists} = moments_db_mnesia:follow("uid2", Mid).
 
 follow(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    ok = moments_db_mnesia:insert_user("uid2", "Name 2"),
-    ok = moments_db_mnesia:follow("uid2", "moment1"),
-    test_utils:verify_follow("uid2", "moment1").
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:follow(Uid2, Mid),
+    test_utils:verify_follow(Uid2, Mid).
 
 unfollow_nonexistent(_Config) ->
     ok = moments_db_mnesia:unfollow("uid1", "moment1").
 
 unfollow(_Config) ->
-    ok = moments_db_mnesia:insert_user("uid1", "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", "uid1"),
-    ok = moments_db_mnesia:insert_user("uid2", "Name 2"),
-    ok = moments_db_mnesia:follow("uid2", "moment1"),
-    test_utils:verify_follow("uid2", "moment1"),
-    ok = moments_db_mnesia:unfollow("uid2", "moment1"),
-    test_utils:verify_follow_empty("uid2").
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:follow(Uid2, Mid),
+    test_utils:verify_follow(Uid2, Mid),
+    ok = moments_db_mnesia:unfollow(Uid2, Mid),
+    test_utils:verify_follow_empty(Uid2).
 
 remove_nonexistent_user(_Config) ->
     {error, user_doesnt_exists} = moments_db_mnesia:remove_user("uid1").
 
 remove_user(_Config) ->
-    Uid = "uid1",
-    ok = moments_db_mnesia:insert_user(Uid, "Name 1"),
+    Uid = moments_db_mnesia:insert_user("Name 1"),
     test_utils:verify_user(Uid, "Name 1"),
     ok = moments_db_mnesia:remove_user(Uid),
     test_utils:verify_user_empty(Uid).
 
 remove_user_that_follows(_Config) ->
-    Uid1 = "uid1",
-    Uid2 = "uid2",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    ok = moments_db_mnesia:insert_user(Uid2, "Name 2"),
-    ok = moments_db_mnesia:follow(Uid2, "moment1"),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:follow(Uid2, Mid),
     test_utils:verify_user(Uid2, "Name 2"),
-    test_utils:verify_follow(Uid2, "moment1"),
+    test_utils:verify_follow(Uid2, Mid),
     ok = moments_db_mnesia:remove_user(Uid2),
     test_utils:verify_user_empty(Uid2),
     test_utils:verify_follow_empty(Uid2).
 
 remove_user_remove_admin_moment(_Config) ->
-    Uid1 = "uid1",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
     test_utils:verify_user(Uid1, "Name 1"),
-    test_utils:verify_admin_of(Uid1, "moment1"),
-    test_utils:verify_moment("moment1", "moment name 1"),
+    test_utils:verify_admin_of(Uid1, Mid),
+    test_utils:verify_moment(Mid, "moment name 1"),
     ok = moments_db_mnesia:remove_user(Uid1),
     test_utils:verify_user_empty(Uid1),
     test_utils:verify_admin_of_empty(Uid1),
-    test_utils:verify_moment_empty("moment1").
+    test_utils:verify_moment_empty(Mid).
 
 % TODO: _which_ user is set as new admin?
 remove_user_set_new_admin_moment(_Config) ->
-    Uid1 = "uid1",
-    Uid2 = "uid2",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    ok = moments_db_mnesia:insert_user(Uid2, "Name 2"),
-    ok = moments_db_mnesia:follow(Uid2, "moment1"),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:follow(Uid2, Mid),
     test_utils:verify_user(Uid1, "Name 1"),
     test_utils:verify_user(Uid2, "Name 2"),
-    test_utils:verify_admin_of(Uid1, "moment1"),
-    test_utils:verify_moment("moment1", "moment name 1"),
+    test_utils:verify_admin_of(Uid1, Mid),
+    test_utils:verify_moment(Mid, "moment name 1"),
     ok = moments_db_mnesia:remove_user(Uid1),
     test_utils:verify_user_empty(Uid1),
     test_utils:verify_user(Uid2, "Name 2"),
-    test_utils:verify_admin_of(Uid2, "moment1"),
-    test_utils:verify_moment("moment1", "moment name 1").
+    test_utils:verify_admin_of(Uid2, Mid),
+    test_utils:verify_moment(Mid, "moment name 1").
 
 remove_user_dont_set_new_admin_moment(_Config) ->
-    Uid1 = "uid1",
-    Uid2 = "uid2",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    ok = moments_db_mnesia:insert_user(Uid2, "Name 2"),
-    ok = moments_db_mnesia:set_new_admin("moment1", Uid2),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:set_new_admin(Mid, Uid2),
     test_utils:verify_user(Uid1, "Name 1"),
     test_utils:verify_user(Uid2, "Name 2"),
-    test_utils:verify_admin_of(Uid1, "moment1"),
-    test_utils:verify_admin_of(Uid2, "moment1"),
-    test_utils:verify_moment("moment1", "moment name 1"),
+    test_utils:verify_admin_of(Uid1, Mid),
+    test_utils:verify_admin_of(Uid2, Mid),
+    test_utils:verify_moment(Mid, "moment name 1"),
     ok = moments_db_mnesia:remove_user(Uid1),
     test_utils:verify_user_empty(Uid1),
     test_utils:verify_user(Uid2, "Name 2"),
-    test_utils:verify_admin_of(Uid2, "moment1"),
-    test_utils:verify_moment("moment1", "moment name 1").
+    test_utils:verify_admin_of(Uid2, Mid),
+    test_utils:verify_moment(Mid, "moment name 1").
 
 set_new_admin(_Config) ->
-    Uid1 = "uid1",
-    Uid2 = "uid2",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    test_utils:verify_admin_of(Uid1, "moment1"),
-    ok = moments_db_mnesia:insert_user(Uid2, "Name 2"),
-    ok = moments_db_mnesia:set_new_admin("moment1", Uid2),
-    test_utils:verify_admin_of(Uid2, "moment1").
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    test_utils:verify_admin_of(Uid1, Mid),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:set_new_admin(Mid, Uid2),
+    test_utils:verify_admin_of(Uid2, Mid).
 
 remove_nonexistent_moment(_Config) ->
     {error, moment_doesnt_exists} = moments_db_mnesia:remove_moment("moment1").
 
 remove_moment(_Config) ->
-    Uid1 = "uid1",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    test_utils:verify_moment("moment1", "moment name 1"),
-    test_utils:verify_admin_of(Uid1, "moment1"),
-    ok = moments_db_mnesia:remove_moment("moment1"),
-    test_utils:verify_moment_empty("moment1"),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    test_utils:verify_moment(Mid, "moment name 1"),
+    test_utils:verify_admin_of(Uid1, Mid),
+    ok = moments_db_mnesia:remove_moment(Mid),
+    test_utils:verify_moment_empty(Mid),
     test_utils:verify_admin_of_empty(Uid1).
 
 remove_moment_remove_follows(_Config) ->
-    Uid1 = "uid1",
-    Uid2 = "uid2",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    ok = moments_db_mnesia:insert_user(Uid2, "Name 2"),
-    ok = moments_db_mnesia:follow(Uid2, "moment1"),
-    test_utils:verify_follow(Uid2, "moment1"),
-    ok = moments_db_mnesia:remove_moment("moment1"),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    Uid2 = moments_db_mnesia:insert_user("Name 2"),
+    ok = moments_db_mnesia:follow(Uid2, Mid),
+    test_utils:verify_follow(Uid2, Mid),
+    ok = moments_db_mnesia:remove_moment(Mid),
     test_utils:verify_follow_empty(Uid2).
 
 get_moment(_Config) ->
-    Uid1 = "uid1",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    {ok, #moment{moment_id = "moment1"}} = moments_db_mnesia:get_moment("moment1").
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    {ok, #moment{moment_id = Mid}} = moments_db_mnesia:get_moment(Mid).
 
 consume_moment(_Config) ->
-    Uid1 = "uid1",
-    ok = moments_db_mnesia:insert_user(Uid1, "Name 1"),
-    ok = moments_db_mnesia:insert_moment("moment1", "moment name 1", Uid1),
-    {ok, Moment} = moments_db_mnesia:get_moment("moment1"),
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    {ok, Moment} = moments_db_mnesia:get_moment(Mid),
     NextMoment = Moment#moment.next_moment,
-    ok = moments_db_mnesia:consume_moment("moment1"),
-    {ok, NewMoment} = moments_db_mnesia:get_moment("moment1"),
+    ok = moments_db_mnesia:consume_moment(Mid),
+    {ok, NewMoment} = moments_db_mnesia:get_moment(Mid),
     NewMoment = Moment#moment{next_moment = NextMoment + 86_400}.
