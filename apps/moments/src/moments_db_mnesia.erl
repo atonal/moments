@@ -9,7 +9,7 @@
          insert_moment/2,
          insert_moment/7,
          remove_moment/1,
-         consume_moment/1,
+         consume_moment/2,
          get_moment/1,
          set_new_admin/2,
          follow/2,
@@ -251,15 +251,22 @@ remove_moment(Mid) ->
     {atomic, Res} = mnesia:transaction(F),
     Res.
 
--spec consume_moment(moment_id()) -> db_ret().
-consume_moment(Mid) ->
+-spec consume_moment(moment_id(), integer()) -> db_ret().
+consume_moment(Mid, DispatchTime) ->
     ?LOG_INFO("consume moment id:~p", [Mid]),
     F = fun() ->
                 case mnesia:read(moment, Mid, write) of
                     [M] ->
-                        NewNextMoment = data_utils:get_next_moment(M),
-                        NewMoment = M#moment{next_moment=NewNextMoment},
-                        mnesia:write(NewMoment);
+                        case data_utils:is_passed(M, DispatchTime) of
+                                true ->
+                                    NewNextMoment = data_utils:get_next_moment(M),
+                                    NewMoment = M#moment{next_moment=NewNextMoment},
+                                    mnesia:write(NewMoment);
+                                false ->
+                                    ?LOG_ERROR("Trying to consume moment before due time! M.next_moment: ~p, dispatch time: ~p, moment: ~p",
+                                               [M#moment.next_moment, DispatchTime, Mid]),
+                                    {error, dispatch_time_in_future}
+                        end;
                     [] ->
                         ?LOG_ERROR("No moment ~p to consume", [Mid]),
                         {error, moment_doesnt_exists}

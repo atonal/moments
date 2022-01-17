@@ -2,11 +2,11 @@
 -include("data_records.hrl").
 -include_lib("kernel/include/logger.hrl").
 
--export([dispatch/1]).
+-export([dispatch/2]).
 
--spec dispatch(moment()) -> any().
-dispatch(Moment) ->
+-spec dispatch(moment(), integer()) -> any().
+dispatch(Moment, DispatchTime) ->
     % TODO: dispatch
     ?LOG_NOTICE("dispatching ~p", [Moment]),
-    moments_db_mnesia:consume_moment(Moment#moment.moment_id),
+    moments_db_mnesia:consume_moment(Moment#moment.moment_id, DispatchTime),
     ok.

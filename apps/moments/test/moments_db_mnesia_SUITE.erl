@@ -24,7 +24,8 @@ all() -> [insert_user,
           remove_moment,
           remove_moment_remove_follows,
           get_moment,
-          consume_moment
+          consume_moment,
+          consume_moment_ahead_of_time
          ].
 
 init_per_testcase(_, Config) ->
@@ -193,6 +194,13 @@ consume_moment(_Config) ->
     Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
     {ok, Moment} = moments_db_mnesia:get_moment(Mid),
     NextMoment = Moment#moment.next_moment,
-    ok = moments_db_mnesia:consume_moment(Mid),
+    ok = moments_db_mnesia:consume_moment(Mid, NextMoment + 1),
     {ok, NewMoment} = moments_db_mnesia:get_moment(Mid),
     NewMoment = Moment#moment{next_moment = NextMoment + 86_400}.
+
+consume_moment_ahead_of_time(_Config) ->
+    Uid1 = moments_db_mnesia:insert_user("Name 1"),
+    Mid = moments_db_mnesia:insert_moment("moment name 1", Uid1),
+    {ok, Moment} = moments_db_mnesia:get_moment(Mid),
+    NextMoment = Moment#moment.next_moment,
+    {error, dispatch_time_in_future} = moments_db_mnesia:consume_moment(Mid, NextMoment - 1).

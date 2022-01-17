@@ -49,7 +49,7 @@ dispatcher({call, From}, get_queue, Data) ->
 dispatcher(state_timeout, check_moments, Data) ->
     ?LOG_INFO("state_timeout: ~p", [Data]),
     DispatchTime = erlang:system_time(second),
-    _Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/1),
+    _Rest = dispatch_moments(Data, DispatchTime, fun moment_dispatch:dispatch/2),
     NewList = orddict_from_moment_list(get_moments(10)),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]}.
@@ -82,14 +82,14 @@ get_moments(_N) ->
     moments_db_mnesia:get_moments().
 
 -spec dispatch_moments(moments_orddict:orddict(), integer(), DispFun) -> [moment()] when
-      DispFun :: fun((moment()) -> any()).
+      DispFun :: fun((moment(), integer()) -> any()).
 dispatch_moments([], _, _) ->
     [];
 dispatch_moments([{_,Moment}|T] = Moments, Time, DispatchFun) ->
     case data_utils:is_passed(Moment, Time) of
         true ->
             ?LOG_INFO("dispatching: ~p", [Moment]),
-            ok = DispatchFun(Moment),
+            ok = DispatchFun(Moment, Time),
             dispatch_moments(T, Time, DispatchFun);
         false ->
             Moments
