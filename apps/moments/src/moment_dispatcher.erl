@@ -9,7 +9,7 @@
 -endif.
 
 -export([start_link/0, stop/0]).
--export([add_moments/1, get_queue/0]).
+-export([add_moments/1, remove_moments/1, get_queue/0]).
 -export([init/1,callback_mode/0]).
 -export([dispatcher/3]).
 
@@ -23,6 +23,13 @@ stop() ->
 -spec add_moments([moment()]) -> ok.
 add_moments(Moments) ->
     gen_statem:cast(?NAME, {add_moments, Moments}).
+
+-spec remove_moments([Moment]) -> ok when
+      Moment :: moment() | moment_id().
+remove_moments(Moments = [H|_]) when is_record(H, moment) ->
+    gen_statem:cast(?NAME, {remove_moments, [X#moment.moment_id || X <- Moments]});
+remove_moments(Moments = [H|_]) when is_integer(H) -> % moment_id is a non_neg_integer()
+    gen_statem:cast(?NAME, {remove_moments, Moments}).
 
 -spec get_queue() -> [moment()].
 get_queue() ->
@@ -41,6 +48,12 @@ callback_mode() -> state_functions.
 dispatcher(cast, {add_moments, Moments}, Data) ->
     ?LOG_INFO("add moments: ~p", [Moments]),
     NewList = moments_orddict:store_list(moment_list_to_dict_list(Moments), Data),
+    Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
+    {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
+% MomentIds :: [moment_id()]
+dispatcher(cast, {remove_moments, MomentIds}, Data) ->
+    ?LOG_INFO("remove moments: ~p", [MomentIds]),
+    NewList = moments_orddict:erase_list(MomentIds, Data),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
 dispatcher({call, From}, get_queue, Data) ->

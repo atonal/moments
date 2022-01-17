@@ -57,3 +57,29 @@ store_list() ->
                                                 {3, #moment{ next_moment=3}}],
                                                [{2, #moment{ next_moment=2}},
                                                 {4, #moment{ next_moment=4}}]))}].
+
+erase_test_() ->
+    {"erase tests", orddict_erase()}.
+orddict_erase() ->
+    [{"erase in beginning",
+      ?_assertEqual([{1, #moment{ next_moment=1}},
+                     {3, #moment{ next_moment=3}}],
+                    moments_orddict:erase(2, [{1, #moment{ next_moment=1}},
+                                              {2, #moment{ next_moment=2}},
+                                              {3, #moment{ next_moment=3}}]))},
+     {"erase nonexisting key is no-op",
+      ?_assertEqual([{1, #moment{ next_moment=1}},
+                     {3, #moment{ next_moment=3}}],
+                    moments_orddict:erase(2, [{1, #moment{ next_moment=1}},
+                                              {3, #moment{ next_moment=3}}]))}].
+
+erase_list_test_() ->
+    {"erase list tests", erase_list()}.
+erase_list() ->
+    [{"erase a list",
+      ?_assertEqual([{1, #moment{ next_moment=1}},
+                     {3, #moment{ next_moment=3}}],
+                    moments_orddict:erase_list([2,4], [{1, #moment{ next_moment=1}},
+                                                       {2, #moment{ next_moment=2}},
+                                                       {3, #moment{ next_moment=3}},
+                                                       {4, #moment{ next_moment=4}}]))}].
