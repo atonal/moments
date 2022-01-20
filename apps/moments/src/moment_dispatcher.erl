@@ -45,12 +45,15 @@ init([]) ->
 callback_mode() -> state_functions.
 
 %% State callback functions
+-spec dispatcher(cast, {add_moments, [moment()]}, moments_orddict:orddict()) -> gen_statem:event_handler_result(dispatcher);
+                (cast, {remove_moments, [moment_id()]}, moments_orddict:orddict()) -> gen_statem:event_handler_result(dispatcher);
+                ({call, pid()}, get_queue, moments_orddict:orddict()) -> gen_statem:event_handler_result(dispatcher);
+                (state_timeout, check_moments, moments_orddict:orddict()) -> gen_statem:event_handler_result(dispatcher).
 dispatcher(cast, {add_moments, Moments}, Data) ->
     ?LOG_INFO("add moments: ~p", [Moments]),
     NewList = moments_orddict:store_list(moment_list_to_dict_list(Moments), Data),
     Timeout = get_next_timeout(NewList, fun erlang:system_time/1),
     {keep_state, NewList, [{state_timeout, Timeout, check_moments}]};
-% MomentIds :: [moment_id()]
 dispatcher(cast, {remove_moments, MomentIds}, Data) ->
     ?LOG_INFO("remove moments: ~p", [MomentIds]),
     NewList = moments_orddict:erase_list(MomentIds, Data),
