@@ -4,7 +4,11 @@
 
 -compile(export_all).
 
-all() -> [write_event, delete_object_event, delete_object_event_object_still_exists].
+all() -> [write_event,
+          delete_object_event,
+          delete_object_event_object_still_exists,
+          delete_event,
+          delete_event_still_exists].
 
 init_per_testcase(_, Config) ->
     meck:new(moment_dispatcher),
@@ -56,5 +60,24 @@ delete_object_event_object_still_exists(Config) ->
     meck:expect(moments_db_mnesia, get_moment, 1, {ok, Mid}),
     WatcherPid = ?config(pid, Config),
     Event = {delete_object, Moment, activity_id},
+    WatcherPid ! {mnesia_table_event, Event},
+    ok = meck:wait(1, moments_db_mnesia, get_moment, [Mid], 5000).
+
+delete_event(Config) ->
+    Mid = 1,
+    meck:expect(moment_dispatcher, remove_moments, 1, ok),
+    meck:expect(moments_db_mnesia, get_moment, 1, {error, moment_doesnt_exists}),
+    WatcherPid = ?config(pid, Config),
+    Event = {delete, {moment, Mid}, activity_id},
+    WatcherPid ! {mnesia_table_event, Event},
+    ok = meck:wait(1, moments_db_mnesia, get_moment, [Mid], 5000),
+    ok = meck:wait(1, moment_dispatcher, remove_moments, [[Mid]], 5000).
+
+delete_event_still_exists(Config) ->
+    Mid = 1,
+    meck:expect(moment_dispatcher, remove_moments, 1, ok),
+    meck:expect(moments_db_mnesia, get_moment, 1, {ok, Mid}),
+    WatcherPid = ?config(pid, Config),
+    Event = {delete, {moment, Mid}, activity_id},
     WatcherPid ! {mnesia_table_event, Event},
     ok = meck:wait(1, moments_db_mnesia, get_moment, [Mid], 5000).

@@ -30,8 +30,7 @@ watch() ->
                     % Erlang doc says "A record has _possibly_ been deleted", so check if it so
                     case moments_db_mnesia:get_moment(OldRecord#moment.moment_id) of
                         {ok, M} ->
-                            ?LOG_NOTICE("Object still exists, don't remove! OldRecord: ~p, Moment from DB: ~p",
-                                        [OldRecord, M]);
+                            ?LOG_NOTICE("Object still exists, don't remove! OldRecord: ~p, Moment from DB: ~p", [OldRecord, M]);
                         {error, moment_doesnt_exists} ->
                             moment_dispatcher:remove_moments([OldRecord])
                     end;
@@ -40,8 +39,7 @@ watch() ->
                     % Erlang doc says "A record has _possibly_ been deleted", so check if it so
                     case moments_db_mnesia:get_moment(Key) of
                         {ok, M} ->
-                            ?LOG_NOTICE("Object still exists, on't remove! Key: ~p, Moment from DB: ~p",
-                                        [Key, M]);
+                            ?LOG_NOTICE("Object still exists, on't remove! Key: ~p, Moment from DB: ~p", [Key, M]);
                         {error, moment_doesnt_exists} ->
                             moment_dispatcher:remove_moments([Key])
                     end
