@@ -5,7 +5,8 @@
   {mod, {webserver_app, []}},
   {applications,
    [kernel,
-    stdlib
+    stdlib,
+    cowboy
    ]},
   {env,[]},
   {modules, [webserver_app, webserver_sup]},
