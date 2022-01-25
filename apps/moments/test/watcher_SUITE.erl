@@ -36,11 +36,13 @@ end_per_suite(_Config) ->
 
 % Tests
 write_event(Config) ->
+    Mid = 1,
+    Moment = #moment{moment_id=Mid},
     meck:expect(moment_dispatcher, add_moments, 1, ok),
     WatcherPid = ?config(pid, Config),
-    Event = {write, db_obj, activity_id},
+    Event = {write, Moment, activity_id},
     WatcherPid ! {mnesia_table_event, Event},
-    ok = meck:wait(1, moment_dispatcher, add_moments, [[db_obj]], 5000).
+    ok = meck:wait(1, moment_dispatcher, add_moments, [[Moment]], 5000).
 
 delete_object_event(Config) ->
     Mid = 1,
