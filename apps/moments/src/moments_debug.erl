@@ -24,13 +24,13 @@ dump_all_tables([], Tables) ->
 
 gen_moment(Next) ->
     #moment{
-       moment_id=1,
-       name="name 1",
-       next_moment=Next,
-       interval=daily,
-       excl_days=[],
-       excl_time=[],
-       private=false}.
+       moment_id = 1,
+       name = <<"name 1">>,
+       next_moment = Next,
+       interval = daily,
+       excl_days = [],
+       excl_time = [],
+       private = false}.
 
 clear_all_tables()->
     clear_all_tables(mnesia:system_info(tables)).

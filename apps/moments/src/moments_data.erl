@@ -12,6 +12,9 @@
         L = lists:zip(Fields, Values),
         maps:from_list(L)).
 
+-spec moment_to_map(moment()) -> map().
 moment_to_map(M) -> ?to_map(moment).
+-spec user_to_map(user()) -> map().
 user_to_map(M) -> ?to_map(user).
+-spec device_to_map(device()) -> map().
 device_to_map(M) -> ?to_map(device).

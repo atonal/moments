@@ -72,7 +72,7 @@ create_tables(Nodes) ->
 -type db_id_ret() :: unique_id() | {error, any()}.
 
 -spec insert_user(user_name()) -> db_id_ret().
-insert_user(Name) ->
+insert_user(Name) when is_bitstring(Name) ->
     ?LOG_INFO("Insert user with name:~p", [Name]),
     F = fun() ->
                 UserPat = #user{name = Name, _ = '_'},
@@ -192,11 +192,11 @@ set_new_admin(Mid, NewAdmin) ->
 
 % This is mostly for debug/testing
 -spec insert_moment(moment_name(), user_id()) -> db_id_ret().
-insert_moment(Name, Uid) ->
+insert_moment(Name, Uid) when is_bitstring(Name) ->
     insert_moment(Name, erlang:system_time(second)+2, daily, [], [], false, Uid).
 
 -spec insert_moment(moment_name(), next_moment(), interval(), excl_days(), excl_time(), private(), user_id()) -> db_id_ret().
-insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) ->
+insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) when is_bitstring(Name) ->
     ?LOG_INFO("Insert moment name:~p admin:~p", [Name, Uid]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =/= [] of
