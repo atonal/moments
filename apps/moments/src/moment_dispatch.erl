@@ -6,7 +6,7 @@
 
 -spec dispatch(moment(), integer()) -> any().
 dispatch(Moment, DispatchTime) ->
-    % TODO: dispatch
     ?LOG_NOTICE("dispatching ~p", [Moment]),
     moments_db_mnesia:consume_moment(Moment#moment.moment_id, DispatchTime),
+    event_hub:notify_moment(Moment),
     ok.

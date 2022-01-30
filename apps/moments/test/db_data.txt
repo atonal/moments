@@ -14,7 +14,7 @@
 {table_id,moment,2}.
 {table_id,user,2}.
 {moment,1,<<"moment 1">>,1643303666,daily,[],[],false}.
-{moment,2,<<"moment 2">>,1643297920,daily,[],[],false}.
-{moment,3,<<"moment 3">>,1643794420,daily,[],[],false}.
+{moment,2,<<"moment 2">>,1643297920,debug,[],[],false}.
+{moment,3,<<"moment 3">>,1643546004,debug,[],[],false}.
 {user,1,<<"user 1">>}.
 {user,2,<<"user 2">>}.

@@ -15,7 +15,9 @@
     moments_db_mnesia,
     moments_data,
     watcher,
-    logger_handler]},
+    logger_handler,
+    event_hub,
+    event_sub]},
   {licenses, ["Apache 2.0"]},
   {links, []}
  ]}.
