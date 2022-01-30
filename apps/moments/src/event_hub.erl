@@ -2,9 +2,12 @@
 -include("data_records.hrl").
 -include_lib("kernel/include/logger.hrl").
 
--export([subscribe/2, unsubscribe/1, notify_moment/1, log_handler/1]).
+-export([start_link/0, subscribe/2, unsubscribe/1, notify_moment/1, log_handler/1]).
 
 -type handler() :: {atom(), reference()}.
+
+start_link() ->
+    gen_event:start_link({local, moment_man}).
 
 -spec subscribe(pid(), moment()) -> handler().
 subscribe(Pid, MomentId) ->
