@@ -1,0 +1,20 @@
+{tables,[{admin_of,[{record_name,admin_of},{attributes,[user,moment]}]},
+         {device,[{record_name,device},{attributes,[device_id,name]}]},
+         {table_id,[{record_name,table_id},{attributes,[table_name,last_id]}]},
+         {moment,[{record_name,moment},
+                  {attributes,[moment_id,name,next_moment,interval,excl_days,
+                               excl_time,private]}]},
+         {owns,[{record_name,owns},{attributes,[user,device]}]},
+         {follows,[{record_name,follows},{attributes,[user,moment]}]},
+         {user,[{record_name,user},{attributes,[user_id,name]}]}]}.
+{admin_of,1,3}.
+{admin_of,1,2}.
+{admin_of,1,1}.
+{table_id,device,0}.
+{table_id,moment,2}.
+{table_id,user,2}.
+{moment,1,<<"moment 1">>,1643303666,daily,[],[],false}.
+{moment,2,<<"moment 2">>,1643297920,daily,[],[],false}.
+{moment,3,<<"moment 3">>,1643794420,daily,[],[],false}.
+{user,1,<<"user 1">>}.
+{user,2,<<"user 2">>}.
