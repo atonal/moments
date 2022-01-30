@@ -10,7 +10,7 @@
     jsx
    ]},
   {env,[]},
-  {modules, [webserver_app, webserver_sup, webserver, moments_h]},
+  {modules, [webserver_app, webserver_sup, webserver, moment_h, moments_h]},
 
   {licenses, ["Apache 2.0"]},
   {links, []}
