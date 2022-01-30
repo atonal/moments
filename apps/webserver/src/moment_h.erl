@@ -31,7 +31,7 @@ to_json(Req, State) ->
             MomentMap = moments_data:moment_to_map(Moment),
             Body = jsx:encode(MomentMap),
             {Body, Req, State};
-        {error, Err} ->
-            % TODO: return 404
-            {atom_to_list(Err), Req, State}
+        {error, _Err} ->
+            Resp = cowboy_req:reply(404, Req),
+            {[], Resp, State}
     end.
