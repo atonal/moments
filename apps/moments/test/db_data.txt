@@ -11,7 +11,7 @@
 {admin_of,1,2}.
 {admin_of,1,1}.
 {table_id,device,0}.
-{table_id,moment,2}.
+{table_id,moment,3}.
 {table_id,user,2}.
 {moment,1,<<"moment 1">>,1643303666,daily,[],[],false}.
 {moment,2,<<"moment 2">>,1643297920,debug,[],[],false}.
