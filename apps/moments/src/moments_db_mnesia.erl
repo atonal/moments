@@ -39,6 +39,7 @@ init_table_id(TableName) ->
                                        write);
                       [_] ->
                           ?LOG_DEBUG("table_id ~p already exists", [TableName]),
+                          % TODO: verify that the index is correct if it exists
                           ok
                   end
           end,
@@ -307,4 +308,5 @@ get_moments() ->
 
 -spec generate_unique_id(id_type()) -> unique_id().
 generate_unique_id(Type) ->
+    % TODO: check that returned id is not in use
     mnesia:dirty_update_counter(table_id, Type, 1).
