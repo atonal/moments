@@ -46,6 +46,7 @@ time_add(Time, {Unit, Value}) ->
             Time + ?sec_to_year(Value)
     end.
 
+% TODO: take into account current time
 -spec get_next_moment(moment()) -> next_moment().
 get_next_moment(#moment{next_moment=Next, interval=Interval}) ->
     case Interval of
