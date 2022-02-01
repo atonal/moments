@@ -50,7 +50,7 @@ from_json(Req0, State) ->
                  M when is_record(M, moment) ->
                      case moments_db_mnesia:insert_moment(M, 1) of
                          Mid when is_integer(Mid) ->
-                             {see_other, <<"api/v1/moments/", (integer_to_binary(Mid))/binary>>};
+                             {see_other, <<(integer_to_binary(Mid))/binary>>};
                          {error, Err} ->
                              cowboy_req:reply(500,
                                               #{<<"content-type">> => <<"text/plain">>},
