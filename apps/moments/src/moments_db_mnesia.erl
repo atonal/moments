@@ -191,14 +191,26 @@ set_new_admin(Mid, NewAdmin) ->
     {atomic, Res} = mnesia:transaction(F),
     Res.
 
-% This is mostly for debug/testing
--spec insert_moment(moment_name(), user_id()) -> db_id_ret().
-insert_moment(Name, Uid) when is_bitstring(Name) ->
-    insert_moment(Name, erlang:system_time(second)+2, daily, [], [], false, Uid).
 
+% TODO: do we need this version?
 -spec insert_moment(moment_name(), next_moment(), interval(), excl_days(), excl_time(), private(), user_id()) -> db_id_ret().
 insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) when is_bitstring(Name) ->
+    insert_moment(#moment{moment_id=unknown,
+                          name=Name,
+                          next_moment=Next,
+                          interval=Interval,
+                          excl_days=ExclDays,
+                          excl_time=ExclTime,
+                          private=Private},
+                  Uid).
+
+-spec insert_moment(moment()|moment_name(), user_id()) -> db_id_ret().
+% This is mostly for debug/testing
+insert_moment(Name, Uid) when is_bitstring(Name) ->
     ?LOG_INFO("Insert moment name:~p admin:~p", [Name, Uid]),
+    insert_moment(Name, erlang:system_time(second)+2, daily, [], [], false, Uid);
+insert_moment(Moment, Uid) when is_record(Moment, moment) ->
+    ?LOG_INFO("Insert moment:~p admin:~p", [Moment, Uid]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =/= [] of
                     true ->
@@ -206,14 +218,9 @@ insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) when is_bi
                         ?LOG_INFO("Moment ID: ~p", [Mid]),
                         case mnesia:read({moment, Mid}) =:= [] of
                             true ->
-                                Moment = #moment{moment_id=Mid,
-                                                 name=Name,
-                                                 next_moment=Next,
-                                                 interval=Interval,
-                                                 excl_days=ExclDays,
-                                                 excl_time=ExclTime,
-                                                 private=Private},
-                                mnesia:write(Moment),
+                                NewMoment = Moment#moment{moment_id = Mid},
+                                ?LOG_INFO("Adding Moment: ~p", [NewMoment]),
+                                mnesia:write(NewMoment),
                                 AdminOf = #admin_of{user=Uid, moment=Mid},
                                 mnesia:write(AdminOf),
                                 Mid;
