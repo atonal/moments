@@ -45,9 +45,9 @@ parse_moment_map(M = #{<<"name">> := Name,
             ?LOG_DEBUG("moments_data: badarg - stack: ~p", [Stack]),
             case lists:keyfind(binary_to_existing_atom, 2, Stack) of
                 {_,_,[AtomStr,_],_} when is_bitstring(AtomStr) ->
-                    {error, << <<"Invalid interval: ">>/binary, AtomStr/binary>>};
+                    {error, <<"Invalid interval: ", AtomStr/binary>>};
                 _ -> % false or {something}
-                    {error, <<"Invalid interval">>}
+                    {error, <<"Invalid interval: ", Int/binary>>}
             end
     end;
 parse_moment_map(_) ->
