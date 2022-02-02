@@ -24,6 +24,12 @@
                           excl_days :: excl_days(),
                           excl_time :: excl_time(),
                           private :: private()}.
+-type moment_data_map() :: #{bitstring() := moment_name(),
+                             bitstring() := next_moment(),
+                             bitstring() := interval(),
+                             bitstring() := excl_days(),
+                             bitstring() := excl_time(),
+                             bitstring() := private()}.
 
 -type user_id() :: unique_id().
 -type user_name() :: bitstring().

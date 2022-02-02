@@ -46,22 +46,26 @@ from_json(Req0, State) ->
     {ok, ReqBody, Req} = read_body(Req0, <<>>),
     ?LOG_DEBUG("moments_h: ReqBody: ~p", [ReqBody]),
     ReqMoment = jsx:decode(ReqBody),
-    Result = case moments_data:map_to_moment(ReqMoment) of
-                 M when is_record(M, moment) ->
+    Result = case moments_data:parse_moment_map(ReqMoment) of
+                 M when is_map(M) ->
                      case moments_db_mnesia:insert_moment(M, 1) of
                          Mid when is_integer(Mid) ->
                              {see_other, <<(integer_to_binary(Mid))/binary>>};
+                         {error, malformed_body, Err} ->
+                             cowboy_req:reply(400,
+                                              #{<<"content-type">> => <<"text/plain">>},
+                                              [<<"Error, malformed body. ">>, Err],
+                                              Req);
                          {error, Err} ->
                              cowboy_req:reply(500,
                                               #{<<"content-type">> => <<"text/plain">>},
                                               [<<"Error: ">>, atom_to_list(Err)],
                                               Req)
                      end;
-                 {error, Err} ->
+                 {error, malformed_body, Err} ->
                      cowboy_req:reply(400,
                                       #{<<"content-type">> => <<"text/plain">>},
-                                      [<<"Error: ">>, Err],
+                                      [<<"Error, malformed body. ">>, Err],
                                       Req)
              end,
-
     {Result, Req, State}.
