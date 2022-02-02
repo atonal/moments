@@ -70,7 +70,7 @@ create_tables(Nodes) ->
 
 
 -type db_ret() :: ok | {error, any()}.
--type db_id_ret() :: unique_id() | {error, any()} | {error, any(), any()}.
+-type db_id_ret() :: unique_id() | {error, any()}.
 
 -spec insert_user(user_name()) -> db_id_ret().
 insert_user(Name) when is_bitstring(Name) ->
@@ -224,8 +224,8 @@ insert_moment(Moment, Uid) when is_map(Moment) andalso map_size(Moment) =:= 6 ->
                                         AdminOf = #admin_of{user=Uid, moment=Mid},
                                         mnesia:write(AdminOf),
                                         Mid;
-                                    {error, malformed_body, Err} ->
-                                        {error, malformed_body, Err}
+                                    {error, Err} ->
+                                        {error, Err}
                                 end;
                             false ->
                                 % This shouldn't happen, but hey...

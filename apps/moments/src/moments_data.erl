@@ -54,7 +54,7 @@ parse_moment_map(_) ->
     {error, malformed_body, "Invalid json"}.
 
 % Moment maps (from json) without ID
--spec map_to_moment(moment_data_map(), moment_id()) -> moment() | {error, atom(), any()}.
+-spec map_to_moment(moment_data_map(), moment_id()) -> moment() | {error, atom()}.
 map_to_moment(M = #{<<"name">> := Name,
                     <<"next_moment">> := Next,
                     <<"interval">> := Int,
@@ -77,4 +77,4 @@ map_to_moment(M = #{<<"name">> := Name,
                 excl_time = ExclTime,
                 private = Priv};
 map_to_moment(_, _) ->
-    {error, malformed_body, "Invalid json"}.
+    {error, invalid_data_map}.

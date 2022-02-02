@@ -19,10 +19,10 @@ service_available(Req, State) ->
     {mnesia:system_info(is_running) =:= yes, Req, State}.
 
 known_methods(Req, State) ->
-	{[<<"GET">>, <<"HEAD">>, <<"OPTIONS">>, <<"POST">>], Req, State}.
+    {[<<"GET">>, <<"HEAD">>, <<"OPTIONS">>, <<"POST">>], Req, State}.
 
 allowed_methods(Req, State) ->
-	{[<<"GET">>, <<"HEAD">>, <<"OPTIONS">>, <<"POST">>], Req, State}.
+    {[<<"GET">>, <<"HEAD">>, <<"OPTIONS">>, <<"POST">>], Req, State}.
 
 content_types_provided(Req, State) ->
     {[{{ <<"application">>, <<"json">>, '*'}, to_json}], Req, State}.
@@ -34,7 +34,7 @@ to_json(Req, State) ->
     Moments = moments_db_mnesia:get_moments(),
     MomentMaps = lists:map(fun moments_data:moment_to_map/1, Moments),
     Body = jsx:encode(MomentMaps),
-	{Body, Req, State}.
+    {Body, Req, State}.
 
 read_body(Req0, Acc) ->
     case cowboy_req:read_body(Req0) of
@@ -51,11 +51,6 @@ from_json(Req0, State) ->
                      case moments_db_mnesia:insert_moment(M, 1) of
                          Mid when is_integer(Mid) ->
                              {see_other, <<(integer_to_binary(Mid))/binary>>};
-                         {error, malformed_body, Err} ->
-                             cowboy_req:reply(400,
-                                              #{<<"content-type">> => <<"text/plain">>},
-                                              [<<"Error, malformed body. ">>, Err],
-                                              Req);
                          {error, Err} ->
                              cowboy_req:reply(500,
                                               #{<<"content-type">> => <<"text/plain">>},
