@@ -24,7 +24,7 @@ user_to_map(M) -> ?to_map(user).
 device_to_map(M) -> ?to_map(device).
 
 % generic map into moment_data_map()
--spec parse_moment_map(map()) -> moment_data_map() | {error, atom(), any()}.
+-spec parse_moment_map(map()) -> moment_data_map() | {error, bitstring()}.
 parse_moment_map(M = #{<<"name">> := Name,
                     <<"next_moment">> := Next,
                     <<"interval">> := Int,
@@ -45,13 +45,13 @@ parse_moment_map(M = #{<<"name">> := Name,
             ?LOG_DEBUG("moments_data: badarg - stack: ~p", [Stack]),
             case lists:keyfind(binary_to_existing_atom, 2, Stack) of
                 {_,_,[AtomStr,_],_} ->
-                    {error, malformed_body, << <<"Invalid value: ">>/binary, AtomStr/binary>>};
+                    {error, << <<"Invalid value: ">>/binary, AtomStr/binary>>};
                 _ -> % false or {something}
-                    {error, malformed_body, "Badarg"}
+                    {error, <<"Badarg">>}
             end
     end;
 parse_moment_map(_) ->
-    {error, malformed_body, "Invalid json"}.
+    {error, <<"Invalid json">>}.
 
 % Moment maps (from json) without ID
 -spec map_to_moment(moment_data_map(), moment_id()) -> moment() | {error, atom()}.

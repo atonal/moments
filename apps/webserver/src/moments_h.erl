@@ -57,7 +57,7 @@ from_json(Req0, State) ->
                                               [<<"Error: ">>, atom_to_list(Err)],
                                               Req)
                      end;
-                 {error, malformed_body, Err} ->
+                 {error, Err} ->
                      cowboy_req:reply(400,
                                       #{<<"content-type">> => <<"text/plain">>},
                                       [<<"Error, malformed body. ">>, Err],
