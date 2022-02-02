@@ -196,7 +196,7 @@ consume_moment(_Config) ->
     NextMoment = Moment#moment.next_moment,
     ok = moments_db_mnesia:consume_moment(Mid, NextMoment + 1),
     {ok, NewMoment} = moments_db_mnesia:get_moment(Mid),
-    NewMoment = Moment#moment{next_moment = NextMoment + 86_400}.
+    NewMoment = Moment#moment{next_moment = NextMoment + 1 + 86_400}.
 
 consume_moment_ahead_of_time(_Config) ->
     Uid1 = moments_db_mnesia:insert_user(<<"Name 1">>),

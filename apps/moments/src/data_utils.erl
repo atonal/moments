@@ -1,5 +1,5 @@
 -module(data_utils).
--export([is_passed/2, is_before/2, time_add/2, get_next_moment/1]).
+-export([is_passed/2, is_before/2, time_add/2, get_next_moment/2]).
 
 -include("data_records.hrl").
 
@@ -46,20 +46,20 @@ time_add(Time, {Unit, Value}) ->
             Time + ?sec_to_year(Value)
     end.
 
-% TODO: take into account current time
--spec get_next_moment(moment()) -> next_moment().
-get_next_moment(#moment{next_moment=Next, interval=Interval}) ->
+-spec get_next_moment(moment(), integer()) -> next_moment().
+get_next_moment(#moment{next_moment=Next, interval=Interval}, CurTime) ->
+    Base = lists:max([Next, CurTime]),
     case Interval of
         debug ->
-            time_add(Next, {minute, 1});
+            time_add(Base, {minute, 1});
         hourly ->
-            time_add(Next, {hour, 1});
+            time_add(Base, {hour, 1});
         daily ->
-            time_add(Next, {day, 1});
+            time_add(Base, {day, 1});
         weekly ->
-            time_add(Next, {week, 1});
+            time_add(Base, {week, 1});
         monthly ->
-            time_add(Next, {month, 1});
+            time_add(Base, {month, 1});
         yearly ->
-            time_add(Next, {year, 1})
+            time_add(Base, {year, 1})
     end.

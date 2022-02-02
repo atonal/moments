@@ -277,7 +277,7 @@ consume_moment(Mid, DispatchTime) ->
                     [M] ->
                         case data_utils:is_passed(M, DispatchTime) of
                                 true ->
-                                    NewNextMoment = data_utils:get_next_moment(M),
+                                    NewNextMoment = data_utils:get_next_moment(M, DispatchTime),
                                     NewMoment = M#moment{next_moment=NewNextMoment},
                                     mnesia:write(NewMoment);
                                 false ->

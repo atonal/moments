@@ -33,10 +33,11 @@ get_next_moment_test_() ->
     {"get_next_moment tests", get_next_moment()}.
 get_next_moment() ->
     [
-     {"debug", ?_assertEqual(61, data_utils:get_next_moment(#moment{ next_moment=1, interval=debug }))},
-     {"hourly", ?_assertEqual(3601, data_utils:get_next_moment(#moment{ next_moment=1, interval=hourly }))},
-     {"daily", ?_assertEqual(86_401, data_utils:get_next_moment(#moment{ next_moment=1, interval=daily }))},
-     {"weekly", ?_assertEqual(604_801, data_utils:get_next_moment(#moment{ next_moment=1, interval=weekly }))},
-     {"monthly", ?_assertEqual(2_592_001, data_utils:get_next_moment(#moment{ next_moment=1, interval=monthly }))},
-     {"yearly", ?_assertEqual(31_536_001, data_utils:get_next_moment(#moment{ next_moment=1, interval=yearly }))}
+     {"debug", ?_assertEqual(61, data_utils:get_next_moment(#moment{ next_moment=1, interval=debug }, 0))},
+     {"debug", ?_assertEqual(62, data_utils:get_next_moment(#moment{ next_moment=1, interval=debug }, 2))},
+     {"hourly", ?_assertEqual(3601, data_utils:get_next_moment(#moment{ next_moment=1, interval=hourly }, 0))},
+     {"daily", ?_assertEqual(86_401, data_utils:get_next_moment(#moment{ next_moment=1, interval=daily }, 0))},
+     {"weekly", ?_assertEqual(604_801, data_utils:get_next_moment(#moment{ next_moment=1, interval=weekly }, 0))},
+     {"monthly", ?_assertEqual(2_592_001, data_utils:get_next_moment(#moment{ next_moment=1, interval=monthly }, 0))},
+     {"yearly", ?_assertEqual(31_536_001, data_utils:get_next_moment(#moment{ next_moment=1, interval=yearly }, 0))}
     ].
