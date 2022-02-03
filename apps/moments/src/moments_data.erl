@@ -3,6 +3,31 @@
 -include_lib("kernel/include/logger.hrl").
 -include("data_records.hrl").
 
+%
+% this way ---> strings map to either atom/string, therefore parsing needed
+% it's also user input, so sanitize!
+%
+%              A   M1    B         M2          C
+% json_text() --> map() --> moment_data_map() --> moment()
+% (A) jsx:decode
+% (B) moment_map_to_data_map - parse, sanitize, strings to atoms/strings etc.
+% (C) moment_data_map_to_record
+%
+% M1: #{ bitstring() => Value }
+% M2: #{ bitstring() => Value (correct type) }
+%
+% this way <--- atom/string maps to strings always, so just encode any map
+%
+%              D   M3    F
+% json_text() <-- map() <-- moment()
+% (D) jsx:encode
+% (F) moment_record_to_map
+%
+% M3: #{ atom() => Value (correct type) }
+%
+% Should M2 = M3? where M3 = moment_data_map() with atom() keys
+%
+
 -export([moment_to_map/1]).
 -export([user_to_map/1]).
 -export([device_to_map/1]).
