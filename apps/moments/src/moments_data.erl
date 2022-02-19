@@ -56,7 +56,7 @@ parse_moment_map(M = #{<<"name">> := Name,
                     <<"excl_days">> := ExclDays,
                     <<"excl_time">> := ExclTime,
                     <<"private">> := Priv}) when
-      map_size(M) =:= 6, % could we ignore other keys?
+      map_size(M) =:= 6, % could we ignore other keys? we could, for forward compatibility
       is_bitstring(Name),
       is_integer(Next),
       is_bitstring(Int), % atom in moment() but in json it's a string
@@ -64,7 +64,13 @@ parse_moment_map(M = #{<<"name">> := Name,
       is_list(ExclTime),
       is_atom(Priv) ->
     try
-        M#{<<"interval">> => binary_to_existing_atom(Int)}
+        #{moment_id => unknown,
+          name => Name,
+          next_moment => Next,
+          interval => binary_to_existing_atom(Int),
+          excl_days => ExclDays,
+          excl_time => ExclTime,
+          private => Priv}
     catch
         error:badarg:Stack ->
             ?LOG_DEBUG("moments_data: badarg - stack: ~p", [Stack]),
@@ -80,14 +86,15 @@ parse_moment_map(_) ->
 
 % Moment maps (from json) without ID
 -spec map_to_moment(moment_data_map(), moment_id()) -> moment() | {error, atom()}.
-map_to_moment(M = #{<<"name">> := Name,
-                    <<"next_moment">> := Next,
-                    <<"interval">> := Int,
-                    <<"excl_days">> := ExclDays,
-                    <<"excl_time">> := ExclTime,
-                    <<"private">> := Priv},
+map_to_moment(M = #{moment_id := unknown,
+                    name := Name,
+                    next_moment := Next,
+                    interval := Int,
+                    excl_days := ExclDays,
+                    excl_time := ExclTime,
+                    private := Priv},
               Mid) when
-      map_size(M) =:= 6,
+      map_size(M) =:= 7,
       is_bitstring(Name),
       is_integer(Next),
       is_atom(Int),

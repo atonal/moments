@@ -195,12 +195,13 @@ set_new_admin(Mid, NewAdmin) ->
 % TODO: do we need this version?
 -spec insert_moment(moment_name(), next_moment(), interval(), excl_days(), excl_time(), private(), user_id()) -> db_id_ret().
 insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) when is_bitstring(Name) ->
-    insert_moment(#{<<"name">>=>Name,
-                    <<"next_moment">>=>Next,
-                    <<"interval">>=>Interval,
-                    <<"excl_days">>=>ExclDays,
-                    <<"excl_time">>=>ExclTime,
-                    <<"private">>=>Private},
+    insert_moment(#{moment_id=>unknown,
+                    name=>Name,
+                    next_moment=>Next,
+                    interval=>Interval,
+                    excl_days=>ExclDays,
+                    excl_time=>ExclTime,
+                    private=>Private},
                   Uid).
 
 -spec insert_moment(moment_data_map()|moment_name(), user_id()) -> db_id_ret().
@@ -208,7 +209,7 @@ insert_moment(Name, Next, Interval, ExclDays, ExclTime, Private, Uid) when is_bi
 insert_moment(Name, Uid) when is_bitstring(Name) ->
     ?LOG_INFO("Insert moment name:~p admin:~p", [Name, Uid]),
     insert_moment(Name, erlang:system_time(second)+2, daily, [], [], false, Uid);
-insert_moment(Moment, Uid) when is_map(Moment) andalso map_size(Moment) =:= 6 ->
+insert_moment(Moment, Uid) when is_map(Moment) andalso map_size(Moment) =:= 7 ->
     ?LOG_INFO("Insert moment:~p admin:~p", [Moment, Uid]),
     F = fun() ->
                 case mnesia:read({user, Uid}) =/= [] of
@@ -240,6 +241,7 @@ insert_moment(Moment, Uid) when is_map(Moment) andalso map_size(Moment) =:= 6 ->
     {atomic, Res} = mnesia:transaction(F),
     Res;
 insert_moment(_, _) ->
+    ?LOG_INFO("Insert moment: no match"),
     {error, invalid_moment}.
 
 -spec remove_moment(moment_id()) -> db_ret().

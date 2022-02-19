@@ -3,7 +3,7 @@
 
 -type id_type() :: moment | user | device.
 
--type moment_id() :: unique_id().
+-type moment_id() :: unique_id() | unknown.
 -type moment_name() :: bitstring().
 -type next_moment() :: utc_time().
 -type interval() :: debug | hourly | daily | weekly | monthly | yearly.
@@ -24,12 +24,13 @@
                           excl_days :: excl_days(),
                           excl_time :: excl_time(),
                           private :: private()}.
--type moment_data_map() :: #{bitstring() := moment_name(),
-                             bitstring() := next_moment(),
-                             bitstring() := interval(),
-                             bitstring() := excl_days(),
-                             bitstring() := excl_time(),
-                             bitstring() := private()}.
+-type moment_data_map() :: #{moment_id := moment_id(),
+                             name := moment_name(),
+                             next_moment := next_moment(),
+                             interval := interval(),
+                             excl_days := excl_days(),
+                             excl_time := excl_time(),
+                             private := private()}.
 
 -type user_id() :: unique_id().
 -type user_name() :: bitstring().
