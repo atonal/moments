@@ -25,7 +25,7 @@
                           excl_time :: excl_time(),
                           private :: private()}.
 
--type user_id() :: unique_id().
+-type user_id() :: unique_id() | unknown.
 -type user_name() :: bitstring().
 -record(user, {user_id :: user_id() | '_',
                name :: user_name() | '_'}).

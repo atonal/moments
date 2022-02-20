@@ -27,6 +27,7 @@
 -export([user_to_map/1]).
 -export([device_to_map/1]).
 -export([parse_moment_map/1]).
+-export([parse_user_map/1]).
 
 -define(to_map(Tag),
         Fields = record_info(fields, Tag),
@@ -76,4 +77,13 @@ parse_moment_map(M = #{<<"name">> := Name,
             end
     end;
 parse_moment_map(_) ->
+    {error, <<"Invalid json">>}.
+
+% generic map into user()
+-spec parse_user_map(map()) -> user() | {error, bitstring()}.
+parse_user_map(#{<<"name">> := Name}) when
+      is_bitstring(Name) ->
+    #user{user_id = unknown,
+          name = Name};
+parse_user_map(_) ->
     {error, <<"Invalid json">>}.

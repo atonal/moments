@@ -6,7 +6,9 @@ start_link() ->
     Dispatch = cowboy_router:compile([{'_',
                                        [{"/", base_h, []},
                                         {"/api/v1/moments", moments_h, []},
-                                        {"/api/v1/moments/:id", [{id, int}], moments_id_h, []}
+                                        {"/api/v1/moments/:id", [{id, int}], moments_id_h, []},
+                                        {"/api/v1/users", users_h, []},
+                                        {"/api/v1/users/:id", [{id, int}], users_id_h, []}
                                        ]}]),
     cowboy:start_clear(http, [{port, 8080}], #{env => #{dispatch => Dispatch}}).
 

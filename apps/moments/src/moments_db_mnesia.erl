@@ -11,10 +11,12 @@
          remove_moment/1,
          consume_moment/2,
          get_moment/1,
+         get_user/1,
          set_new_admin/2,
          follow/2,
          unfollow/2,
-         get_moments/0]).
+         get_moments/0,
+         get_users/0]).
 
 init(Nodes) ->
     case mnesia:change_table_copy_type(schema, node(), disc_copies) of
@@ -72,9 +74,12 @@ create_tables(Nodes) ->
 -type db_ret() :: ok | {error, any()}.
 -type db_id_ret() :: unique_id() | {error, any()}.
 
--spec insert_user(user_name()) -> db_id_ret().
+-spec insert_user(user_name()|user()) -> db_id_ret().
 insert_user(Name) when is_bitstring(Name) ->
-    ?LOG_INFO("Insert user with name:~p", [Name]),
+    insert_user(#user{user_id = unknown,
+                     name = Name});
+insert_user(User = #user{name = Name}) ->
+    ?LOG_INFO("Insert user:~p", [User]),
     F = fun() ->
                 UserPat = #user{name = Name, _ = '_'},
                 Users = mnesia:match_object(UserPat),
@@ -83,8 +88,8 @@ insert_user(Name) when is_bitstring(Name) ->
                        ?LOG_INFO("User ID: ~p", [Uid]),
                        case mnesia:read({user, Uid}) =:= [] of
                            true ->
-                               User = #user{user_id=Uid, name=Name},
-                               mnesia:write(User),
+                               NewUser = User#user{user_id=Uid},
+                               mnesia:write(NewUser),
                                Uid;
                            false ->
                                % This shouldn't happen, but hey...
@@ -311,6 +316,30 @@ get_moment(Mid) ->
 get_moments() ->
     F = fun() ->
                 Pat = #moment{_ = '_'},
+                mnesia:match_object(Pat)
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
+
+-spec get_user(user_id()) -> db_val_ret().
+get_user(Uid) ->
+    ?LOG_INFO("get user id:~p", [Uid]),
+    F = fun() ->
+                case mnesia:read({user, Uid}) of
+                    [M] ->
+                        {ok, M};
+                    [] ->
+                        ?LOG_ERROR("No user ~p to get", [Uid]),
+                        {error, user_doesnt_exists}
+                end
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
+
+-spec get_users() -> [user()].
+get_users() ->
+    F = fun() ->
+                Pat = #user{_ = '_'},
                 mnesia:match_object(Pat)
         end,
     {atomic, Res} = mnesia:transaction(F),
