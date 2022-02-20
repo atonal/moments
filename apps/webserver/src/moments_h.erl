@@ -47,7 +47,7 @@ from_json(Req0, State) ->
     ?LOG_DEBUG("moments_h: ReqBody: ~p", [ReqBody]),
     ReqMoment = jsx:decode(ReqBody),
     Result = case moments_data:parse_moment_map(ReqMoment) of
-                 M when is_map(M) ->
+                 M when is_record(M, moment) ->
                      case moments_db_mnesia:insert_moment(M, 1) of
                          Mid when is_integer(Mid) ->
                              {see_other, <<(integer_to_binary(Mid))/binary>>};
