@@ -50,7 +50,7 @@ from_json(Req0, State) ->
                  User when is_record(User, user) ->
                      case moments_db_mnesia:insert_user(User) of
                          Uid when is_integer(Uid) ->
-                             {see_other, <<(integer_to_binary(Uid))/binary>>};
+                             {see_other, <<"/api/v1/users/", (integer_to_binary(Uid))/binary>>};
                          {error, Err} ->
                              cowboy_req:reply(500,
                                               #{<<"content-type">> => <<"text/plain">>},
