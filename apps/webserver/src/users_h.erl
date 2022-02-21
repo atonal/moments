@@ -53,7 +53,7 @@ from_json(Req0, State) ->
                              {see_other, <<"/api/v1/users/", (integer_to_binary(Uid))/binary>>};
                          {error, Err} ->
                              cowboy_req:reply(500,
-                                              #{<<"content-type">> => <<"text/plain">>},
+                                              #{<<"content-type">> => <<"application/json">>},
                                               jsx:encode(#{error=>
                                                            #{reason=> <<"server error">>,
                                                              text => Err}}),
@@ -61,7 +61,7 @@ from_json(Req0, State) ->
                      end;
                  {error, Err} ->
                      cowboy_req:reply(400,
-                                      #{<<"content-type">> => <<"text/plain">>},
+                                      #{<<"content-type">> => <<"application/json">>},
                                       jsx:encode(#{error=>
                                                    #{reason=> <<"malformed body">>,
                                                      text => Err}}),
