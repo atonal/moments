@@ -28,6 +28,7 @@
 -export([device_to_map/1]).
 -export([parse_moment_map/1]).
 -export([parse_user_map/1]).
+-export([moments_with_links_to_jsonapi_map/1]).
 
 -define(to_map(Tag),
         Fields = record_info(fields, Tag),
@@ -62,7 +63,7 @@ parse_moment_map(M = #{<<"name">> := Name,
         #moment{moment_id = unknown,
           name = Name,
           next_moment = Next,
-          interval = binary_to_existing_atom(Int),
+          interval = erlang:binary_to_existing_atom(Int),
           excl_days = ExclDays,
           excl_time = ExclTime,
           private = Priv}
@@ -87,3 +88,31 @@ parse_user_map(#{<<"name">> := Name}) when
           name = Name};
 parse_user_map(_) ->
     {error, <<"Invalid json">>}.
+
+-spec moments_with_links_to_jsonapi_map(moment_with_links()) -> map().
+moments_with_links_to_jsonapi_map(MomentsWLinks) ->
+    #{
+      <<"data">> =>
+      [
+       #{
+         <<"type">> => moments,
+         <<"id">> => M#moment.moment_id,
+         <<"attributes">> => maps:without([moment_id], moment_to_map(M)),
+         <<"relationships">> =>
+         #{
+           <<"follows">> =>
+           #{
+             <<"data">> =>
+             [#{<<"type">> => user, <<"id">> => F#follows.user} ||
+              F <- L, is_record(F, follows)]
+            },
+           <<"admin">> =>
+           #{
+             <<"data">> =>
+             [#{<<"type">> => user, <<"id">> => A#admin_of.user} ||
+              A <- L, is_record(A, admin_of)]
+            }
+          }
+        } || {M, L} <- maps:to_list(MomentsWLinks)
+      ]
+     }.

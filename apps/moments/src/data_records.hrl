@@ -10,6 +10,7 @@
 -type excl_days() :: list().
 -type excl_time() :: list().
 -type private() :: boolean().
+
 -record(moment, {moment_id :: moment_id() | '_',
                  name :: moment_name() | '_',
                  next_moment :: next_moment() | '_',
@@ -40,13 +41,19 @@
                           name :: device_name()}.
 
 -record(follows, {user :: user_id() | '_',
-                 moment :: moment_id() | '_'}).
+                  moment :: moment_id() | '_'}).
+-type follows() :: #follows{user :: user_id(),
+                            moment :: moment_id()}.
 
 -record(admin_of, {user :: user_id() | '_',
-                 moment :: moment_id() | '_'}).
+                   moment :: moment_id() | '_'}).
+-type admin_of() :: #admin_of{user :: user_id(),
+                              moment :: moment_id()}.
 
 -record(owns, {user :: user_id() | '_',
          device :: device_id() | '_'}).
 
 -record(table_id, {table_name :: atom(),
                    last_id :: non_neg_integer()}).
+
+-type moment_with_links() :: #{moment() := [follows() | admin_of()]}.

@@ -2,6 +2,7 @@
 
 -include("data_records.hrl").
 -include_lib("kernel/include/logger.hrl").
+-include_lib("stdlib/include/qlc.hrl").
 
 -export([init/1,
          insert_user/1,
@@ -16,6 +17,8 @@
          follow/2,
          unfollow/2,
          get_moments/0,
+         get_moments_with_links/0,
+         get_moments_with_links/1,
          get_users/0]).
 
 init(Nodes) ->
@@ -320,6 +323,58 @@ get_moments() ->
         end,
     {atomic, Res} = mnesia:transaction(F),
     Res.
+
+-spec get_moments_with_links() -> moment_with_links().
+get_moments_with_links() ->
+    get_moments_with_links(fun(_) -> true end).
+
+-spec get_moments_with_links(fun((moment()) -> boolean())) -> moment_with_links().
+get_moments_with_links(Pred) ->
+    % Produces [{moment(), []|[follows()]}]
+    MomentFollowsPairs = qlc:q([{Moment, if Follows#follows.moment =:= Moment#moment.moment_id ->
+                                                [Follows];
+                                            true ->
+                                                []
+                                         end}
+                                || Moment <- mnesia:table(moment), Pred(Moment),
+                                   Follows <- mnesia:table(follows)],
+                               [unique]),
+    % Produces [{moment(), []|[admin_of()]}]
+    MomentAdminsAdded = qlc:q([{Moment, if Admin#admin_of.moment =:= Moment#moment.moment_id ->
+                                                [Admin];
+                                            true ->
+                                                []
+                                         end}
+                                || Moment <- mnesia:table(moment), Pred(Moment),
+                                   Admin <- mnesia:table(admin_of)],
+                               [unique]),
+    % folds the above list to #{moment() => [follows()|admin_of()]}
+    F = fun() -> G = qlc:fold(
+                   fun({Moment, Follows}, Acc) ->
+                           maps:update_with(Moment,
+                                            fun(FollowList) ->
+                                                    FollowList ++ Follows
+                                            end,
+                                            Follows,
+                                            Acc)
+                   end,
+                   #{},
+                   MomentFollowsPairs),
+                 A = qlc:fold(
+                   fun({Moment, Admin}, Acc) ->
+                           maps:update_with(Moment,
+                                            fun(FollowList) ->
+                                                    FollowList ++ Admin
+                                            end,
+                                            Admin,
+                                            Acc)
+                   end,
+                   #{},
+                   MomentAdminsAdded),
+                 {G, A}
+        end,
+    {atomic, {G, A}} = mnesia:transaction(F),
+    maps:merge_with(fun(_K, V1, V2) -> V1 ++ V2 end, G, A).
 
 -spec get_user(user_id()) -> db_val_ret().
 get_user(Uid) ->

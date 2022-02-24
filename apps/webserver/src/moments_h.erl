@@ -31,8 +31,8 @@ content_types_accepted(Req, State) ->
     {[{{ <<"application">>, <<"json">>, '*'}, from_json}], Req, State}.
 
 to_json(Req, State) ->
-    Moments = moments_db_mnesia:get_moments(),
-    MomentMaps = lists:map(fun moments_data:moment_to_map/1, Moments),
+    Moments = moments_db_mnesia:get_moments_with_links(),
+    MomentMaps = moments_data:moments_with_links_to_jsonapi_map(Moments),
     Body = jsx:encode(MomentMaps),
     {Body, Req, State}.
 
