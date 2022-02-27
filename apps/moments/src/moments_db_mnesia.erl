@@ -17,6 +17,7 @@
          follow/2,
          unfollow/2,
          get_moments/0,
+         get_moment_with_links/1,
          get_moments_with_links/0,
          get_moments_with_links/1,
          get_users/0]).
@@ -315,6 +316,30 @@ get_moment(Mid) ->
     {atomic, Res} = mnesia:transaction(F),
     Res.
 
+-spec get_moment_with_links(moment_id()) -> moment_with_links().
+get_moment_with_links(Mid) ->
+    ?LOG_INFO("get moment with links, id:~p", [Mid]),
+    F = fun() ->
+                case mnesia:read({moment, Mid}) of
+                    [Moment] ->
+                        ?LOG_INFO("found moment:~p", [Moment]),
+                        % Produces [follows()]
+                        MomentFollows = qlc:q([Follows ||
+                                               Follows <- mnesia:table(follows),
+                                               Follows#follows.moment =:= Moment#moment.moment_id]),
+                        % Produces [admin_of()]
+                        MomentAdmins = qlc:q([Admin ||
+                                              Admin <- mnesia:table(admin_of),
+                                              Admin#admin_of.moment =:= Moment#moment.moment_id]),
+                        % Combine as #{moment() => [follows()|admin_of()]}
+                        #{Moment => qlc:eval(qlc:append(MomentFollows, MomentAdmins))};
+                    [] ->
+                        #{}
+                end
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+     Res.
+
 -spec get_moments() -> [moment()].
 get_moments() ->
     F = fun() ->
@@ -330,6 +355,7 @@ get_moments_with_links() ->
 
 -spec get_moments_with_links(fun((moment()) -> boolean())) -> moment_with_links().
 get_moments_with_links(Pred) ->
+    ?LOG_INFO("get moments with links, predicate:~p", [Pred]),
     % Produces [{moment(), []|[follows()]}]
     MomentFollowsPairs = qlc:q([{Moment, if Follows#follows.moment =:= Moment#moment.moment_id ->
                                                 [Follows];

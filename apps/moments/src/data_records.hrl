@@ -56,4 +56,5 @@
 -record(table_id, {table_name :: atom(),
                    last_id :: non_neg_integer()}).
 
--type moment_with_links() :: #{moment() := [follows() | admin_of()]}.
+-type links() :: [follows() | admin_of()].
+-type moment_with_links() :: #{moment() := links()}.

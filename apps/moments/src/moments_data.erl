@@ -89,30 +89,39 @@ parse_user_map(#{<<"name">> := Name}) when
 parse_user_map(_) ->
     {error, <<"Invalid json">>}.
 
+-spec moment_jsonapi_data(moment(), links()) -> map().
+moment_jsonapi_data(Moment, Links) ->
+    #{
+      <<"type">> => moments,
+      <<"id">> => Moment#moment.moment_id,
+      <<"attributes">> => maps:without([moment_id], moment_to_map(Moment)),
+      <<"relationships">> =>
+      #{
+        <<"follows">> =>
+        #{
+          <<"data">> =>
+          [#{<<"type">> => user, <<"id">> => Follows#follows.user} ||
+           Follows <- Links, is_record(Follows, follows)]
+         },
+        <<"admin">> =>
+        #{
+          <<"data">> =>
+          [#{<<"type">> => user, <<"id">> => Admin#admin_of.user} ||
+           Admin <- Links, is_record(Admin, admin_of)]
+         }
+       }
+     }.
+
 -spec moments_with_links_to_jsonapi_map(moment_with_links()) -> map().
+moments_with_links_to_jsonapi_map(MomentsWLinks) when map_size(MomentsWLinks) =:= 1 ->
+    [{Moment, Links}] = maps:to_list(MomentsWLinks),
+    #{
+      <<"data">> => moment_jsonapi_data(Moment, Links)
+     };
 moments_with_links_to_jsonapi_map(MomentsWLinks) ->
     #{
       <<"data">> =>
       [
-       #{
-         <<"type">> => moments,
-         <<"id">> => M#moment.moment_id,
-         <<"attributes">> => maps:without([moment_id], moment_to_map(M)),
-         <<"relationships">> =>
-         #{
-           <<"follows">> =>
-           #{
-             <<"data">> =>
-             [#{<<"type">> => user, <<"id">> => F#follows.user} ||
-              F <- L, is_record(F, follows)]
-            },
-           <<"admin">> =>
-           #{
-             <<"data">> =>
-             [#{<<"type">> => user, <<"id">> => A#admin_of.user} ||
-              A <- L, is_record(A, admin_of)]
-            }
-          }
-        } || {M, L} <- maps:to_list(MomentsWLinks)
+       moment_jsonapi_data(Moment, Links) || {Moment, Links} <- maps:to_list(MomentsWLinks)
       ]
      }.
