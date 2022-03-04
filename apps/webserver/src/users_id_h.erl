@@ -8,6 +8,7 @@
 -export([allowed_methods/2]).
 -export([content_types_provided/2]).
 -export([to_json/2]).
+-export([resource_exists/2]).
 
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -24,14 +25,19 @@ allowed_methods(Req, State) ->
 content_types_provided(Req, State) ->
     {[{{ <<"application">>, <<"json">>, '*'}, to_json}], Req, State}.
 
-to_json(Req, State) ->
+resource_exists(Req, State) ->
     UserId = cowboy_req:binding(id, Req),
+    ?LOG_INFO("Request for user id: ~p", [UserId]),
     case moments_db_mnesia:get_user(UserId) of
         {ok, User} ->
-            UserMap = moments_data:user_to_map(User),
-            Body = jsx:encode(UserMap),
-            {Body, Req, State};
-        {error, _Err} ->
-            Resp = cowboy_req:reply(404, Req),
-            {[], Resp, State}
+            ?LOG_DEBUG("User found: ~p", [User]),
+            {true, Req, State#{data => User}};
+        {error, Err} ->
+            ?LOG_DEBUG("User not found: ~p, ~p", [UserId, Err]),
+            {false, Req, State}
     end.
+
+to_json(Req, #{data := User} = State) ->
+    UserMap = moments_data:user_to_map(User),
+    Body = jsx:encode(UserMap),
+    {Body, Req, State}.
