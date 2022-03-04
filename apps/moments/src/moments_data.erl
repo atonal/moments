@@ -101,13 +101,13 @@ moment_jsonapi_data(Moment, Links) ->
         <<"follows">> =>
         #{
           <<"data">> =>
-          [#{<<"type">> => user, <<"id">> => Follows#follows.user} ||
+          [#{<<"type">> => users, <<"id">> => Follows#follows.user} ||
            Follows <- Links, is_record(Follows, follows)]
          },
         <<"admin">> =>
         #{
           <<"data">> =>
-          [#{<<"type">> => user, <<"id">> => Admin#admin_of.user} ||
+          [#{<<"type">> => users, <<"id">> => Admin#admin_of.user} ||
            Admin <- Links, is_record(Admin, admin_of)]
          }
        }
