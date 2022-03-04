@@ -20,6 +20,8 @@
          get_moment_with_links/1,
          get_moments_with_links/0,
          get_moments_with_links/1,
+         get_users_with_links/0,
+         get_users_with_links/1,
          get_users/0,
          get_user_with_links/1]).
 
@@ -450,6 +452,59 @@ get_users() ->
         end,
     {atomic, Res} = mnesia:transaction(F),
     Res.
+
+-spec get_users_with_links() -> user_with_links().
+get_users_with_links() ->
+    get_users_with_links(fun(_) -> true end).
+
+-spec get_users_with_links(fun((user()) -> boolean())) -> user_with_links().
+get_users_with_links(Pred) ->
+    ?LOG_INFO("get users with links"),
+    % Produces [{user(), []|[follows()]}]
+    UserFollowsPairs = qlc:q([{User, if Follows#follows.user =:= User#user.user_id ->
+                                                [Follows];
+                                            true ->
+                                                []
+                                         end}
+                                || User <- mnesia:table(user), Pred(User),
+                                   Follows <- mnesia:table(follows)],
+                               [unique]),
+    % Produces [{user(), []|[admin_of()]}]
+    UserAdminOfPairs = qlc:q([{User, if Admin#admin_of.user =:= User#user.user_id ->
+                                                [Admin];
+                                            true ->
+                                                []
+                                         end}
+                                || User <- mnesia:table(user), Pred(User),
+                                   Admin <- mnesia:table(admin_of)],
+                               [unique]),
+    % folds the above list to #{user() => [follows()|admin_of()]}
+    F = fun() -> G = qlc:fold(
+                   fun({User, Follows}, Acc) ->
+                           maps:update_with(User,
+                                            fun(FollowList) ->
+                                                    FollowList ++ Follows
+                                            end,
+                                            Follows,
+                                            Acc)
+                   end,
+                   #{},
+                   UserFollowsPairs),
+                 A = qlc:fold(
+                   fun({User, Admin}, Acc) ->
+                           maps:update_with(User,
+                                            fun(FollowList) ->
+                                                    FollowList ++ Admin
+                                            end,
+                                            Admin,
+                                            Acc)
+                   end,
+                   #{},
+                   UserAdminOfPairs),
+                 {G, A}
+        end,
+    {atomic, {G, A}} = mnesia:transaction(F),
+    maps:merge_with(fun(_K, V1, V2) -> V1 ++ V2 end, G, A).
 
 -spec generate_unique_id(id_type()) -> unique_id().
 generate_unique_id(Type) ->

@@ -31,8 +31,8 @@ content_types_accepted(Req, State) ->
     {[{{ <<"application">>, <<"json">>, '*'}, from_json}], Req, State}.
 
 to_json(Req, State) ->
-    Users = moments_db_mnesia:get_users(),
-    UserMaps = lists:map(fun moments_data:user_to_map/1, Users),
+    Users = moments_db_mnesia:get_users_with_links(),
+    UserMaps = moments_data:users_with_links_to_jsonapi_map(Users),
     Body = jsx:encode(UserMaps),
     {Body, Req, State}.
 
