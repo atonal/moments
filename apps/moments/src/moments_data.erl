@@ -29,6 +29,7 @@
 -export([parse_moment_map/1]).
 -export([parse_user_map/1]).
 -export([moments_with_links_to_jsonapi_map/1]).
+-export([users_with_links_to_jsonapi_map/1]).
 
 -define(to_map(Tag),
         Fields = record_info(fields, Tag),
@@ -123,5 +124,42 @@ moments_with_links_to_jsonapi_map(MomentsWLinks) ->
       <<"data">> =>
       [
        moment_jsonapi_data(Moment, Links) || {Moment, Links} <- maps:to_list(MomentsWLinks)
+      ]
+     }.
+
+-spec user_jsonapi_data(user(), links()) -> map().
+user_jsonapi_data(User, Links) ->
+    #{
+      <<"type">> => users,
+      <<"id">> => User#user.user_id,
+      <<"attributes">> => maps:without([user_id], user_to_map(User)),
+      <<"relationships">> =>
+      #{
+        <<"follows">> =>
+        #{
+          <<"data">> =>
+          [#{<<"type">> => moments, <<"id">> => Follows#follows.moment} ||
+           Follows <- Links, is_record(Follows, follows)]
+         },
+        <<"admin">> =>
+        #{
+          <<"data">> =>
+          [#{<<"type">> => moments, <<"id">> => Admin#admin_of.moment} ||
+           Admin <- Links, is_record(Admin, admin_of)]
+         }
+       }
+     }.
+
+-spec users_with_links_to_jsonapi_map(user_with_links()) -> map().
+users_with_links_to_jsonapi_map(UsersWLinks) when map_size(UsersWLinks) =:= 1 ->
+    [{User, Links}] = maps:to_list(UsersWLinks),
+    #{
+      <<"data">> => user_jsonapi_data(User, Links)
+     };
+users_with_links_to_jsonapi_map(UsersWLinks) ->
+    #{
+      <<"data">> =>
+      [
+       user_jsonapi_data(User, Links) || {User, Links} <- maps:to_list(UsersWLinks)
       ]
      }.

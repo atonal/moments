@@ -58,3 +58,4 @@
 
 -type links() :: [follows() | admin_of()].
 -type moment_with_links() :: #{moment() := links()}.
+-type user_with_links() :: #{user() := links()}.

@@ -20,7 +20,8 @@
          get_moment_with_links/1,
          get_moments_with_links/0,
          get_moments_with_links/1,
-         get_users/0]).
+         get_users/0,
+         get_user_with_links/1]).
 
 init(Nodes) ->
     case mnesia:change_table_copy_type(schema, node(), disc_copies) of
@@ -416,6 +417,30 @@ get_user(Uid) ->
         end,
     {atomic, Res} = mnesia:transaction(F),
     Res.
+
+-spec get_user_with_links(user_id()) -> user_with_links().
+get_user_with_links(Uid) ->
+    ?LOG_INFO("get user with links, id:~p", [Uid]),
+    F = fun() ->
+                case mnesia:read({user, Uid}) of
+                    [User] ->
+                        ?LOG_INFO("found user:~p", [User]),
+                        % Produces [follows()]
+                        MomentsFollowed = qlc:q([Follows ||
+                                               Follows <- mnesia:table(follows),
+                                               Follows#follows.user =:= User#user.user_id]),
+                        % Produces [admin_of()]
+                        MomentsAdministered = qlc:q([Admin ||
+                                              Admin <- mnesia:table(admin_of),
+                                              Admin#admin_of.user =:= User#user.user_id]),
+                        % Combine as #{user() => [follows()|admin_of()]}
+                        #{User => qlc:eval(qlc:append(MomentsFollowed, MomentsAdministered))};
+                    [] ->
+                        #{}
+                end
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+     Res.
 
 -spec get_users() -> [user()].
 get_users() ->

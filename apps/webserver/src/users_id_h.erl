@@ -28,16 +28,16 @@ content_types_provided(Req, State) ->
 resource_exists(Req, State) ->
     UserId = cowboy_req:binding(id, Req),
     ?LOG_INFO("Request for user id: ~p", [UserId]),
-    case moments_db_mnesia:get_user(UserId) of
-        {ok, User} ->
+    case moments_db_mnesia:get_user_with_links(UserId) of
+        U when map_size(U) =:= 0 ->
+            ?LOG_DEBUG("User not found: ~p", [UserId]),
+            {false, Req, State};
+        User ->
             ?LOG_DEBUG("User found: ~p", [User]),
-            {true, Req, State#{data => User}};
-        {error, Err} ->
-            ?LOG_DEBUG("User not found: ~p, ~p", [UserId, Err]),
-            {false, Req, State}
+            {true, Req, State#{data => User}}
     end.
 
 to_json(Req, #{data := User} = State) ->
-    UserMap = moments_data:user_to_map(User),
+    UserMap = moments_data:users_with_links_to_jsonapi_map(User),
     Body = jsx:encode(UserMap),
     {Body, Req, State}.
