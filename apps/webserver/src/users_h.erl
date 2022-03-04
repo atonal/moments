@@ -52,19 +52,21 @@ from_json(Req0, State) ->
                          Uid when is_integer(Uid) ->
                              {see_other, <<"/api/v1/users/", (integer_to_binary(Uid))/binary>>};
                          {error, Err} ->
-                             cowboy_req:reply(500,
-                                              #{<<"content-type">> => <<"application/json">>},
-                                              jsx:encode(#{error=>
-                                                           #{reason=> <<"server error">>,
-                                                             text => Err}}),
-                                              Req)
+                             cowboy_req:reply(
+                               500,
+                               #{<<"content-type">> => <<"application/json">>},
+                               jsx:encode(#{error=>
+                                            #{reason=> <<"server error">>,
+                                              text => Err}}),
+                               Req)
                      end;
                  {error, Err} ->
-                     cowboy_req:reply(400,
-                                      #{<<"content-type">> => <<"application/json">>},
-                                      jsx:encode(#{error=>
-                                                   #{reason=> <<"malformed body">>,
-                                                     text => Err}}),
-                                      Req)
+                     cowboy_req:reply(
+                       400,
+                       #{<<"content-type">> => <<"application/json">>},
+                       jsx:encode(#{error=>
+                                    #{reason=> <<"malformed body">>,
+                                      text => Err}}),
+                       Req)
              end,
     {Result, Req, State}.
