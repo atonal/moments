@@ -20,6 +20,7 @@
          get_moment_with_links/1,
          get_moments_with_links/0,
          get_moments_with_links/1,
+         get_followed_moments/1,
          get_users_with_links/0,
          get_users_with_links/1,
          get_users/0,
@@ -404,6 +405,21 @@ get_moments_with_links(Pred) ->
         end,
     {atomic, {G, A}} = mnesia:transaction(F),
     maps:merge_with(fun(_K, V1, V2) -> V1 ++ V2 end, G, A).
+
+-spec get_followed_moments(user_id()) -> [moment()].
+get_followed_moments(UserId) ->
+    % TODO: error on non-existent user
+    ?LOG_INFO("get moments followed by user:~p", [UserId]),
+    MomentIds = qlc:q([Follows#follows.moment
+                       || Follows <- mnesia:table(follows), Follows#follows.user =:= UserId]),
+    F = fun() ->
+                qlc:fold(
+                  fun(Mid, Acc) -> Acc ++ mnesia:read({moment, Mid}) end,
+                  [],
+                  MomentIds)
+        end,
+    {atomic, Res} = mnesia:transaction(F),
+    Res.
 
 -spec get_user(user_id()) -> db_val_ret().
 get_user(Uid) ->

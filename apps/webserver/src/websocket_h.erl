@@ -25,10 +25,9 @@ init(Req, State) ->
     {cowboy_websocket, Req, State#{user => UserId}, Opts}.
 
 -spec websocket_init(state()) -> {term(), state()}.
-websocket_init(#{user := User} = State) ->
-    ?LOG_INFO("websocket init for user ~p!", [User]),
-    % TODO: get the user's moments only
-    Moments = moments_db_mnesia:get_moments(),
+websocket_init(#{user := UserId} = State) ->
+    ?LOG_INFO("websocket init for user ~p!", [UserId]),
+    Moments = moments_db_mnesia:get_followed_moments(UserId),
     HandlerIds = lists:foldl(
                    fun(M, AccIn) -> AccIn ++ [event_hub:subscribe(self(), M)] end,
                    [],
