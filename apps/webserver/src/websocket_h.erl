@@ -29,7 +29,9 @@ websocket_init(#{user := UserId} = State) ->
     ?LOG_INFO("websocket init for user ~p!", [UserId]),
     Moments = moments_db_mnesia:get_followed_moments(UserId),
     HandlerIds = lists:foldl(
-                   fun(M, AccIn) -> AccIn ++ [event_hub:subscribe(self(), M)] end,
+                   fun(M, AccIn) ->
+                           AccIn ++ [event_hub:subscribe(self(), M#moment.moment_id)]
+                   end,
                    [],
                    Moments),
     {ok, State#{handlers => HandlerIds}}.
