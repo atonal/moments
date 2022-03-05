@@ -9,14 +9,17 @@
 start_link() ->
     gen_event:start_link({local, moment_man}).
 
+% TODO: moment_id() instead of moment()
 -spec subscribe(pid(), moment()) -> handler().
-subscribe(Pid, MomentId) ->
+subscribe(Pid, Moment) ->
+    ?LOG_INFO("event_hub: Pid ~p subscribed for moment ~p!", [Pid, Moment]),
     HandlerId = {event_sub, make_ref()},
-    gen_event:add_handler(moment_man, HandlerId, {Pid, MomentId}),
+    gen_event:add_handler(moment_man, HandlerId, {Pid, Moment}),
     HandlerId.
 
 -spec unsubscribe(handler()) -> term().
 unsubscribe(HandlerId) ->
+    ?LOG_INFO("event_hub: Unsibscribing ~p!", [HandlerId]),
     gen_event:delete_handler(moment_man, HandlerId, unsubscribe).
 
 -spec notify_moment(moment()) -> ok.

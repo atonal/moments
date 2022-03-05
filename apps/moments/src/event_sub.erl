@@ -5,6 +5,7 @@
 
 -export([init/1, handle_event/2, handle_call/2, terminate/2]).
 
+% TODO: moment_id() instead of moment()
 -type state() :: {pid(), moment()}.
 
 -spec init(state()) -> {ok, state()}.
@@ -12,8 +13,8 @@ init(State) ->
     {ok, State}.
 
 -spec handle_event(term(), state()) -> {ok, state()}.
-handle_event(Event = {moment, Moment=#moment{moment_id=MomentId}},
-             State = {Pid, MomentId}) ->
+handle_event(Event = {moment, Moment},
+             State = {Pid, Moment}) ->
     ?LOG_NOTICE("event_sub: moment: ~p", [Moment]),
     Pid ! Event,
     {ok, State};
