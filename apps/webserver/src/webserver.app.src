@@ -9,7 +9,8 @@
     cowboy,
     jsx,
     oidcc,
-    oidcc_cowboy
+    oidcc_cowboy,
+    cowboy_session
    ]},
   {env,[]},
   {modules,

@@ -20,20 +20,10 @@ login_succeeded(Token, EnvMap) ->
     ?LOG_INFO("Env: ~p~n~n***************************************~n", [EnvMap]),
     CookieName = login_h:cookie_name(),
     Path = <<"/">>,
+    #{id:=#{claims:=#{<<"preferred_username">>:=Username}}} = Token,
+    {ok, _Req} = cowboy_session:set(user, Username, maps:get(req, EnvMap)),
     Updates = [
-               {redirect, Path},
-               {cookie,
-                CookieName,
-                maps:get(token, maps:get(access, Token)),
-                #{max_age => 30, http_only => true}},
-               {cookie,
-                <<"refresh_token">>,
-                maps:get(token, maps:get(refresh, Token)),
-                #{max_age => 30, http_only => true}},
-               {cookie,
-                <<"id_token">>,
-                maps:get(token, maps:get(id, Token)),
-                #{max_age => 30, http_only => true}}
+               {redirect, Path}
               ],
     {ok, Updates}.
 

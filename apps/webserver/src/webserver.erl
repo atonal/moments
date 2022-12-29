@@ -31,7 +31,11 @@ start_link() ->
                     {"/api/v1/users/:id", [{id, int}], users_id_h, #{}},
                     {"/api/v1/users/:id/ws", [{id, int}], websocket_h, #{}}
                    ]}]),
-    cowboy:start_clear(http, [{port, 8080}], #{env => #{dispatch => Dispatch}}).
+    cowboy:start_clear(http,
+                       [{port, 8080}],
+                       #{env => #{dispatch => Dispatch},
+                         middlewares => [cowboy_session, cowboy_router, cowboy_handler]
+                        }).
 
 stop() ->
     ok = cowboy:stop_listener(http).
