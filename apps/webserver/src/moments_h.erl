@@ -72,32 +72,6 @@ from_json(Req0, State) ->
              end,
     {Result, Req, State}.
 
-extract_token(Req) ->
-    cowboy_req:header(<<"authorization">>, Req).
-
-parse_token(<<"Bearer ", Tok/binary>>) ->
-    Tok;
-parse_token(Tok) ->
-    ?LOG_DEBUG("moments_h: token undefined: ~p", [Tok]),
-    undefined.
-
 is_authorized(Req, State) ->
-    ?LOG_DEBUG("moments_h: is_authorized"),
-    Tok = parse_token(extract_token(Req)),
-    Res = check_token(Tok),
-    {Res, Req, State}.
-
-check_token(undefined) ->
-    ?LOG_DEBUG("moments_h: no token"),
-    {false, <<"Bearer">>};
-check_token(Token) ->
-    ?LOG_DEBUG("moments_h: check token"),
-    IsAuth = moments_auth:is_authenticated(Token),
-    auth_result(IsAuth).
-
-auth_result({ok, Tok}) ->
-    ?LOG_DEBUG("moments_h: is authenticated! ~p", [Tok]),
-    true;
-auth_result({error, Tok}) ->
-    ?LOG_DEBUG("moments_h: not authenticated! ~p", [Tok]),
-    {false, <<"Bearer">>}.
+    {Res, Req2} = moments_auth:is_authorized(Req),
+    {Res, Req2, State}.

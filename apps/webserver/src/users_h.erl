@@ -11,6 +11,7 @@
 -export([content_types_accepted/2]).
 -export([to_json/2]).
 -export([from_json/2]).
+-export([is_authorized/2]).
 
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -70,3 +71,7 @@ from_json(Req0, State) ->
                        Req)
              end,
     {Result, Req, State}.
+
+is_authorized(Req, State) ->
+    {Res, Req2} = moments_auth:is_authorized(Req),
+    {Res, Req2, State}.

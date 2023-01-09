@@ -9,6 +9,7 @@
 -export([content_types_provided/2]).
 -export([to_json/2]).
 -export([resource_exists/2]).
+-export([is_authorized/2]).
 
 init(Req, State) ->
     {cowboy_rest, Req, State}.
@@ -41,3 +42,7 @@ to_json(Req, #{data := User} = State) ->
     UserMap = moments_data:users_with_links_to_jsonapi_map(User),
     Body = jsx:encode(UserMap),
     {Body, Req, State}.
+
+is_authorized(Req, State) ->
+    {Res, Req2} = moments_auth:is_authorized(Req),
+    {Res, Req2, State}.
